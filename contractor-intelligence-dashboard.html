@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contractor Intelligence Dashboard — NA PMW 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue:#003087;--green:#006B3F;--red:#CC0001;--amber:#B8860B;
+  --lblue:#EBF3FB;--lgreen:#EAF3DE;--lred:#FCEBEB;--lamber:#FAEEDA;
+  --lgrey:#F0F2F5;--mgrey:#BBBBBB;--dgrey:#555;--black:#1A1A1A;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#E8EBF0;min-height:100vh;padding:0}
+
+.header{background:var(--blue);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid var(--green);position:sticky;top:0;z-index:50}
+.hlogo{display:flex;align-items:center;gap:8px}
+.hbar{width:4px;height:26px;border-radius:1px}
+.htitle{font-size:13px;font-weight:700;letter-spacing:.03em;line-height:1.2}
+.hsub{font-size:9px;color:rgba(255,255,255,.6);margin-top:1px}
+.hmeta{text-align:right;font-size:9px;color:rgba(255,255,255,.6);line-height:1.6}
+.hrestr{font-size:8px;font-weight:700;color:#ffaaaa;letter-spacing:.06em}
+
+.body{padding:10px 12px;display:flex;flex-direction:column;gap:10px;max-width:1100px;margin:0 auto}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stat{background:#fff;border-radius:6px;padding:10px 12px;border:0.5px solid #dde2ea}
+.stlabel{font-size:9px;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+.stval{font-size:22px;font-weight:700;line-height:1}
+.stch{font-size:10px;margin-top:3px;color:#888}
+
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.panel{background:#fff;border-radius:6px;border:0.5px solid #dde2ea;overflow:hidden}
+.phead{padding:9px 14px;border-bottom:0.5px solid #eee;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ptitle{font-size:12px;font-weight:700;color:var(--black)}
+.pbadge{font-size:8px;font-weight:700;padding:2px 8px;border-radius:10px;letter-spacing:.04em;white-space:nowrap}
+.bg-blue{background:var(--lblue);color:#0C447C}
+.bg-red{background:var(--lred);color:#791F1F}
+.bg-green{background:var(--lgreen);color:#27500A}
+.bg-amber{background:var(--lamber);color:#633806}
+.pbody{padding:12px 14px}
+
+.hbtn-row{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.hbtn{font-size:10px;padding:4px 12px;border:1px solid #ccc;background:#fff;border-radius:4px;cursor:pointer;transition:all .15s;color:#444}
+.hbtn.active{background:var(--blue);border-color:var(--blue);color:#fff}
+
+.matrow{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:0.5px solid #f0f2f5;cursor:pointer;border-radius:3px;transition:background .1s}
+.matrow:last-child{border-bottom:none}
+.matrow:hover,.matrow.sel{background:#EBF3FB}
+.matname{font-size:11px;font-weight:600;color:var(--black);width:88px;flex-shrink:0}
+.bartrack{flex:1;height:7px;background:#eee;border-radius:2px;overflow:hidden}
+.barfill{height:7px;border-radius:2px;transition:width .35s}
+.matpct{font-size:11px;font-weight:700;width:46px;text-align:right;flex-shrink:0}
+.chip{font-size:8px;padding:2px 6px;border-radius:3px;font-weight:700;flex-shrink:0}
+
+.legend-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:0.5px solid #eee}
+.leg{display:flex;align-items:center;gap:4px;font-size:9.5px;color:var(--dgrey)}
+.legdot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+
+.msel-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.msel-btn{font-size:9px;padding:3px 8px;border:1px solid #ccc;background:#fff;border-radius:3px;cursor:pointer;transition:all .15s;color:#444}
+.msel-btn.active{background:var(--blue);border-color:var(--blue);color:#fff}
+
+.trigger-box{background:var(--lred);border:1px solid #F7C1C1;border-radius:4px;padding:8px 10px;margin-bottom:10px;display:none}
+.tb-title{font-size:11px;font-weight:700;color:#791F1F;margin-bottom:2px}
+.tb-body{font-size:10px;color:#A32D2D;line-height:1.4}
+
+.wf-row{display:flex;align-items:flex-start;justify-content:center;gap:0;padding:12px 8px;background:#F0F2F5;border-radius:4px;margin-bottom:12px;flex-wrap:wrap}
+.wf-step{display:flex;flex-direction:column;align-items:center;gap:3px}
+.wf-circle{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border:2px solid;transition:all .4s}
+.wf-label{font-size:8.5px;text-align:center;font-weight:600;color:#555;max-width:58px;line-height:1.3}
+.wf-arr{font-size:16px;color:#bbb;margin-top:10px;padding:0 3px}
+
+.alog{}
+.aitem{border-left:3px solid;padding:8px 10px;margin-bottom:6px;border-radius:0 4px 4px 0;background:#fff;border:0.5px solid #eee;border-left-width:3px}
+.aitem:last-child{margin-bottom:0}
+.atop{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
+.atitle{font-size:11px;font-weight:700;color:var(--black)}
+.atime{font-size:9px;color:#888}
+.abody{font-size:10px;color:#555;line-height:1.45;margin-bottom:5px}
+.aroute{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.rs{font-size:9px;padding:2px 7px;border-radius:3px;font-weight:600}
+.rs-done{background:var(--lgreen);color:#27500A}
+.rs-active{background:var(--blue);color:#fff}
+.rs-pend{background:#f0f2f5;color:#888}
+.rarr{font-size:10px;color:#ccc}
+
+.sim-btn{font-size:10px;padding:5px 14px;border:1px solid var(--blue);color:var(--blue);background:#fff;border-radius:4px;cursor:pointer;font-weight:600;transition:all .15s}
+.sim-btn:hover{background:var(--blue);color:#fff}
+.sim-btn.firing{background:var(--red);border-color:var(--red);color:#fff}
+
+.threshold-note{font-size:9px;color:var(--dgrey);border-left:3px solid var(--mgrey);padding-left:8px;margin-top:8px;line-height:1.5}
+
+.footer{background:var(--blue);color:rgba(255,255,255,.45);font-size:8px;padding:7px 16px;display:flex;justify-content:space-between;margin-top:2px;border-top:2px solid var(--green)}
+
+@keyframes pulseAnim{0%,100%{opacity:1}50%{opacity:.25}}
+.pulse{animation:pulseAnim .8s ease-in-out 4}
+
+@media(max-width:680px){
+  .stats{grid-template-columns:1fr 1fr}
+  .row2{grid-template-columns:1fr}
+  .stval{font-size:18px}
+}
+@media(max-width:400px){
+  .stats{grid-template-columns:1fr 1fr}
+  .wf-arr{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="hlogo">
+    <div class="hbar" style="background:var(--green)"></div>
+    <div class="hbar" style="background:var(--red)"></div>
+    <div>
+      <div class="htitle">Contractor Intelligence Dashboard</div>
+      <div class="hsub">Nigerian Army Special Projects &nbsp;|&nbsp; AI Price Index &amp; Alert Platform</div>
+    </div>
+  </div>
+  <div class="hmeta">
+    <div>Updated: <span id="clock">--</span></div>
+    <div>FY 2026 &nbsp;|&nbsp; All Formations</div>
+    <div class="hrestr">ILLUSTRATIVE &nbsp;|&nbsp; PMW 2026</div>
+  </div>
+</div>
+
+<div class="body">
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stlabel">Active Projects</div>
+      <div class="stval" style="color:var(--blue)">47</div>
+      <div class="stch">Across 12 formations</div>
+    </div>
+    <div class="stat">
+      <div class="stlabel">Live Alerts</div>
+      <div class="stval" id="alertCount" style="color:var(--red)">3</div>
+      <div class="stch" id="alertSub">2 amber &nbsp;·&nbsp; 1 red</div>
+    </div>
+    <div class="stat">
+      <div class="stlabel">Materials Tracked</div>
+      <div class="stval" style="color:var(--blue)">6</div>
+      <div class="stch">Nightly price ingestion</div>
+    </div>
+    <div class="stat">
+      <div class="stlabel">Avg 30-Day Drift</div>
+      <div class="stval" id="avgDrift" style="color:var(--red)">+6.4%</div>
+      <div class="stch">Above neutral baseline</div>
+    </div>
+  </div>
+
+  <div class="row2">
+
+    <div class="panel">
+      <div class="phead">
+        <span class="ptitle">AI Price Index — Material Forecast</span>
+        <span class="pbadge bg-blue">LIVE MODEL</span>
+      </div>
+      <div class="pbody">
+        <div class="hbtn-row" id="horizonBtns">
+          <button class="hbtn active" onclick="setHorizon(30,this)">30 days</button>
+          <button class="hbtn" onclick="setHorizon(60,this)">60 days</button>
+          <button class="hbtn" onclick="setHorizon(90,this)">90 days</button>
+        </div>
+        <div id="matList"></div>
+        <div class="legend-row">
+          <div class="leg"><div class="legdot" style="background:var(--lgreen);border:1px solid #97C459"></div>Within ±5% — normal</div>
+          <div class="leg"><div class="legdot" style="background:var(--lamber);border:1px solid #EF9F27"></div>5–10% — watch</div>
+          <div class="leg"><div class="legdot" style="background:var(--lred);border:1px solid #F09595"></div>&gt;10% — alert</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="phead">
+        <span class="ptitle">Forecast Chart — <span id="chartMatName">Steel Rods</span></span>
+        <span class="pbadge bg-blue" id="chartMatBadge">Steel Rods</span>
+      </div>
+      <div class="pbody" style="padding-bottom:8px">
+        <div class="msel-row" id="matSelBtns"></div>
+        <div style="position:relative;width:100%;height:195px">
+          <canvas id="forecastChart" role="img" aria-label="Line chart of material price forecast over 90 days">Forecast chart for selected material showing historical actuals and 30/60/90-day price projections.</canvas>
+        </div>
+        <div class="legend-row" style="margin-top:6px">
+          <div class="leg"><div class="legdot" style="background:var(--blue)"></div>Actual</div>
+          <div class="leg"><div class="legdot" style="background:var(--green);border:1px dashed var(--green)"></div>30-day</div>
+          <div class="leg"><div class="legdot" style="background:var(--amber);border:1px dashed var(--amber)"></div>60-day</div>
+          <div class="leg"><div class="legdot" style="background:var(--red);border:1px dashed var(--red)"></div>90-day</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="panel">
+    <div class="phead">
+      <span class="ptitle">Power Automate Alert Workflow — Live Log</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="pbadge bg-red" id="wfStatus">MONITORING</span>
+        <button class="sim-btn" id="simBtn" onclick="triggerAlert()">Simulate breach</button>
+      </div>
+    </div>
+    <div class="pbody">
+      <div class="trigger-box" id="triggerBox">
+        <div class="tb-title" id="triggerTitle">THRESHOLD BREACH DETECTED</div>
+        <div class="tb-body" id="triggerBody">Cement index crossed +10.2% — Power Automate workflow firing now...</div>
+      </div>
+      <div class="wf-row">
+        <div class="wf-step">
+          <div class="wf-circle" id="wf1" style="background:var(--lred);border-color:var(--red);color:#791F1F">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 2L13.5 13H1.5L7.5 2Z" fill="#791F1F"/></svg>
+          </div>
+          <div class="wf-label" style="color:#791F1F">Breach<br>detected</div>
+        </div>
+        <div class="wf-arr" id="arr1">&#8594;</div>
+        <div class="wf-step">
+          <div class="wf-circle" id="wf2" style="background:#F0F2F5;border-color:#ccc;color:#888">PO</div>
+          <div class="wf-label">Project<br>Officer</div>
+        </div>
+        <div class="wf-arr" id="arr2">&#8594;</div>
+        <div class="wf-step">
+          <div class="wf-circle" id="wf3" style="background:#F0F2F5;border-color:#ccc;color:#888">RE</div>
+          <div class="wf-label">Resident<br>Engineer</div>
+        </div>
+        <div class="wf-arr" id="arr3">&#8594;</div>
+        <div class="wf-step">
+          <div class="wf-circle" id="wf4" style="background:#F0F2F5;border-color:#ccc;color:#888">DP</div>
+          <div class="wf-label">DProc<br>Desk</div>
+        </div>
+        <div class="wf-arr" id="arr4">&#8594;</div>
+        <div class="wf-step">
+          <div class="wf-circle" id="wf5" style="background:#F0F2F5;border-color:#ccc;color:#888">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7L6 11L12 3" stroke="#888" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <div class="wf-label">Audit<br>logged</div>
+        </div>
+      </div>
+      <div id="alertLog"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <span>Data ingestion: nightly 23:00 WAT &nbsp;|&nbsp; AI Price Index v2.1 &nbsp;|&nbsp; Threshold: ±5% variance</span>
+  <span>ILLUSTRATIVE ONLY — PMW 2026 &nbsp;|&nbsp; NASME Makurdi</span>
+</div>
+
+<script>
+const materials=[
+  {name:'Steel Rods',   d30:8.2,  d60:12.4, d90:17.1},
+  {name:'Cement',       d30:3.8,  d60:6.1,  d90:10.2},
+  {name:'Electrical',   d30:12.6, d60:18.3, d90:24.7},
+  {name:'Labour',       d30:3.2,  d60:5.0,  d90:7.8 },
+  {name:'Timber',       d30:-1.5, d60:-0.8, d90:1.2 },
+  {name:'Aggregate',    d30:2.1,  d60:4.4,  d90:6.9 },
+];
+let horizon=30,selMat=0,alertFiring=false,alertCount=3,chart=null;
+
+function getDrift(m){return horizon===30?m.d30:horizon===60?m.d60:m.d90;}
+function getStatus(d){const a=Math.abs(d);return a<=5?'green':a<=10?'amber':'red';}
+
+function renderMats(){
+  const el=document.getElementById('matList');
+  el.innerHTML='';
+  materials.forEach((m,i)=>{
+    const d=getDrift(m);
+    const st=getStatus(d);
+    const bw=Math.min(Math.abs(d)/26*100,100).toFixed(1);
+    const bc=st==='green'?'var(--green)':st==='amber'?'var(--amber)':'var(--red)';
+    const pc=d>=0?(st==='green'?'var(--green)':st==='amber'?'var(--amber)':'var(--red)'):'var(--green)';
+    const cbg=st==='green'?'var(--lgreen)':st==='amber'?'var(--lamber)':'var(--lred)';
+    const cc=st==='green'?'#27500A':st==='amber'?'#633806':'#791F1F';
+    const txt=st==='green'?'Normal':st==='amber'?'Watch':'Alert';
+    const row=document.createElement('div');
+    row.className='matrow'+(i===selMat?' sel':'');
+    row.innerHTML=`<span class="matname">${m.name}</span><div class="bartrack"><div class="barfill" style="width:${bw}%;background:${bc}"></div></div><span class="matpct" style="color:${pc}">${d>=0?'+':''}${d.toFixed(1)}%</span><span class="chip" style="background:${cbg};color:${cc}">${txt}</span>`;
+    row.onclick=()=>{selMat=i;renderMats();renderChart();document.getElementById('chartMatName').textContent=m.name;document.getElementById('chartMatBadge').textContent=m.name;renderMatSel();};
+    el.appendChild(row);
+  });
+}
+
+function renderMatSel(){
+  const el=document.getElementById('matSelBtns');
+  el.innerHTML='';
+  materials.forEach((m,i)=>{
+    const b=document.createElement('button');
+    b.className='msel-btn'+(i===selMat?' active':'');
+    b.textContent=m.name;
+    b.onclick=()=>{selMat=i;renderMats();renderChart();document.getElementById('chartMatName').textContent=m.name;document.getElementById('chartMatBadge').textContent=m.name;renderMatSel();};
+    el.appendChild(b);
+  });
+}
+
+function buildChartData(idx){
+  const m=materials[idx];
+  const lbl=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov'];
+  const act=[100,101.2,102.1,101.8,103.5,104.1,null,null,null,null,null];
+  function interp(s,e,len,off){const r=[];for(let i=0;i<11;i++){if(i<off)r.push(null);else if(i<off+len){const t=(i-off)/(len-1);r.push(parseFloat((s+(e-s)*t).toFixed(2)));}else r.push(null);}return r;}
+  return{lbl,act,f30:interp(104.1,100+m.d30,3,5),f60:interp(104.1,100+m.d60,5,5),f90:interp(104.1,100+m.d90,7,5)};
+}
+
+function renderChart(){
+  if(chart){chart.destroy();}
+  const d=buildChartData(selMat);
+  const ctx=document.getElementById('forecastChart').getContext('2d');
+  chart=new Chart(ctx,{
+    type:'line',
+    data:{labels:d.lbl,datasets:[
+      {label:'Actual',     data:d.act,borderColor:'#003087',backgroundColor:'transparent',borderWidth:2.5,pointRadius:3,tension:.3,spanGaps:false},
+      {label:'30-day',     data:d.f30,borderColor:'#006B3F',backgroundColor:'transparent',borderWidth:1.5,borderDash:[5,3],pointRadius:2,tension:.3,spanGaps:false},
+      {label:'60-day',     data:d.f60,borderColor:'#B8860B',backgroundColor:'transparent',borderWidth:1.5,borderDash:[5,3],pointRadius:2,tension:.3,spanGaps:false},
+      {label:'90-day',     data:d.f90,borderColor:'#CC0001',backgroundColor:'transparent',borderWidth:1.5,borderDash:[5,3],pointRadius:2,tension:.3,spanGaps:false},
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y!=null?c.parsed.y.toFixed(1):''}`}}},
+      scales:{
+        y:{min:88,max:130,grid:{color:'#eee'},ticks:{font:{size:10},color:'#888',callback:v=>v.toFixed(0)}},
+        x:{grid:{display:false},ticks:{font:{size:10},color:'#888'}}
+      }
+    },
+    plugins:[{id:'thr',afterDraw(ch){
+      const{ctx,scales:{y,x}}=ch;
+      const y105=y.getPixelForValue(105),y95=y.getPixelForValue(95);
+      ctx.save();ctx.strokeStyle='rgba(204,0,1,.35)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+      ctx.beginPath();ctx.moveTo(x.left,y105);ctx.lineTo(x.right,y105);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(x.left,y95);ctx.lineTo(x.right,y95);ctx.stroke();
+      ctx.fillStyle='rgba(204,0,1,.7)';ctx.font='8px system-ui';
+      ctx.fillText('+5%',x.right-28,y105-3);ctx.fillText('-5%',x.right-28,y95-3);
+      ctx.restore();
+    }}]
+  });
+}
+
+function setHorizon(h,btn){
+  horizon=h;
+  document.querySelectorAll('#horizonBtns .hbtn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMats();renderChart();
+}
+
+const BASE_ALERTS=[
+  {mat:'Electrical Wiring',drift:'+12.6%',contract:'41EB-C042 Barracks Rewire',status:'red', time:'07:14 WAT',route:['done','done','active','pending']},
+  {mat:'Steel Rods',       drift:'+8.2%', contract:'43EB-B017 Admin Block',    status:'amber',time:'06:58 WAT',route:['done','active','pending','pending']},
+  {mat:'Cement (OPC)',     drift:'+6.1%', contract:'45EB-D003 Officers Mess',  status:'amber',time:'06:45 WAT',route:['done','pending','pending','pending']},
+];
+
+function renderAlerts(alerts){
+  const el=document.getElementById('alertLog');el.innerHTML='';
+  const steps=['Project Officer','Resident Engineer','DProc Desk','Audit Log'];
+  alerts.forEach(a=>{
+    const bc=a.status==='red'?'#CC0001':a.status==='amber'?'#B8860B':'#006B3F';
+    const tc=a.status==='red'?'tag-red':'tag-amber';
+    let rh='';
+    steps.forEach((st,i)=>{
+      const cls=a.route[i]==='done'?'rs-done':a.route[i]==='active'?'rs-active':'rs-pend';
+      if(i>0)rh+=`<span class="rarr">&#8594;</span>`;
+      rh+=`<span class="rs ${cls}">${st}</span>`;
+    });
+    const div=document.createElement('div');
+    div.className='aitem';div.style.borderLeftColor=bc;
+    div.innerHTML=`<div class="atop"><span class="atitle">${a.mat} &nbsp;<span class="pbadge ${tc==='tag-red'?'bg-red':'bg-amber'}">${a.status==='red'?'RED ALERT':'WATCH'}</span></span><span class="atime">${a.time}</span></div><div class="abody">Contract: ${a.contract} &nbsp;|&nbsp; Index drift: <strong>${a.drift}</strong> above May baseline (Base=100)</div><div class="aroute">${rh}</div>`;
+    el.appendChild(div);
+  });
+}
+
+function triggerAlert(){
+  if(alertFiring)return;
+  alertFiring=true;
+  const btn=document.getElementById('simBtn');
+  btn.textContent='Firing...';btn.classList.add('firing');
+  const box=document.getElementById('triggerBox');
+  box.style.display='block';box.classList.add('pulse');
+  document.getElementById('wfStatus').textContent='BREACH DETECTED';
+  document.getElementById('wfStatus').className='pbadge bg-red';
+  const steps=['wf2','wf3','wf4','wf5'];
+  const arrs=['arr1','arr2','arr3','arr4'];
+  const cols=['#003087','#006B3F','#CC0001','#444'];
+  const delays=[900,2000,3100,4200];
+  steps.forEach((id,i)=>{
+    setTimeout(()=>{
+      const el=document.getElementById(id);
+      el.style.background=i<3?'#EBF3FB':'#EAF3DE';
+      el.style.borderColor=cols[i];el.style.color=cols[i];
+      if(id==='wf5')el.innerHTML=`<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7L6 11L12 3" stroke="${cols[i]}" stroke-width="2" stroke-linecap="round"/></svg>`;
+      if(arrs[i])document.getElementById(arrs[i]).style.color=cols[i];
+    },delays[i]);
+  });
+  setTimeout(()=>{
+    alertCount++;
+    document.getElementById('alertCount').textContent=alertCount;
+    document.getElementById('alertSub').textContent='3 amber \u00a0·\u00a0 1 red \u00a0· NEW';
+    document.getElementById('avgDrift').textContent='+7.1%';
+    const newA={mat:'Cement (OPC)',drift:'+10.2%',contract:'46EB-A009 Training Wing',status:'red',time:'LIVE',route:['done','active','pending','pending']};
+    renderAlerts([newA,...BASE_ALERTS]);
+    btn.textContent='Simulate breach';btn.classList.remove('firing');
+    document.getElementById('wfStatus').textContent='MONITORING';
+    alertFiring=false;
+    setTimeout(()=>{
+      box.style.display='none';box.classList.remove('pulse');
+      steps.forEach(id=>{
+        if(id==='wf2'||id==='wf3'){const el=document.getElementById(id);el.style.background='#F0F2F5';el.style.borderColor='#ccc';el.style.color='#888';}
+      });
+      ['arr1','arr2','arr3','arr4'].forEach(id=>{document.getElementById(id).style.color='#bbb';});
+    },6000);
+  },5200);
+}
+
+function tick(){
+  document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' WAT';
+}
+
+renderMats();renderMatSel();renderChart();renderAlerts(BASE_ALERTS);
+tick();setInterval(tick,1000);
+</script>
+</body>
+</html>
