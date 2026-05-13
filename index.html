@@ -3,418 +3,787 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Contractor Intelligence Dashboard — NA PMW 2026</title>
+<title>NASP Contractor Cost Intelligence — NA PMW 2026</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --blue:#003087;--green:#006B3F;--red:#CC0001;--amber:#B8860B;
-  --lblue:#EBF3FB;--lgreen:#EAF3DE;--lred:#FCEBEB;--lamber:#FAEEDA;
-  --lgrey:#F0F2F5;--mgrey:#BBBBBB;--dgrey:#555;--black:#1A1A1A;
+  --navy:#003087;--navy2:#001f5b;--green:#006B3F;--green2:#004F2D;
+  --red:#CC0001;--amber:#B8860B;--amber2:#FFD966;
+  --lblue:#dbeafe;--lgreen:#dcfce7;--lred:#fee2e2;--lamber:#fef9c3;
+  --bg:#0d1117;--surface:#161b22;--surface2:#21262d;--border:#30363d;
+  --text:#e6edf3;--muted:#8b949e;--accent:#58a6ff;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
 }
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#E8EBF0;min-height:100vh;padding:0}
 
-.header{background:var(--blue);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid var(--green);position:sticky;top:0;z-index:50}
-.hlogo{display:flex;align-items:center;gap:8px}
-.hbar{width:4px;height:26px;border-radius:1px}
-.htitle{font-size:13px;font-weight:700;letter-spacing:.03em;line-height:1.2}
-.hsub{font-size:9px;color:rgba(255,255,255,.6);margin-top:1px}
-.hmeta{text-align:right;font-size:9px;color:rgba(255,255,255,.6);line-height:1.6}
-.hrestr{font-size:8px;font-weight:700;color:#ffaaaa;letter-spacing:.06em}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:13px}
 
-.body{padding:10px 12px;display:flex;flex-direction:column;gap:10px;max-width:1100px;margin:0 auto}
+/* HEADER */
+.header{
+  background:linear-gradient(135deg,var(--navy2) 0%,var(--navy) 60%,var(--green2) 100%);
+  border-bottom:2px solid var(--green);padding:10px 16px;
+  position:sticky;top:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.h-left{display:flex;align-items:center;gap:10px}
+.h-bar{width:3px;height:32px;background:var(--green);border-radius:2px;flex-shrink:0}
+.h-title{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.06em;color:#fff;line-height:1.3}
+.h-sub{font-size:9px;color:rgba(255,255,255,.55);margin-top:2px;letter-spacing:.04em}
+.h-right{text-align:right}
+.h-restricted{font-family:var(--mono);font-size:8px;font-weight:700;color:#ff7b72;letter-spacing:.1em}
+.h-meta{font-size:9px;color:rgba(255,255,255,.45);margin-top:2px}
+.live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#3fb950;margin-right:4px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
+/* BODY */
+.body{padding:12px 14px;display:flex;flex-direction:column;gap:12px;max-width:1200px;margin:0 auto}
+
+/* STAT CARDS */
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.stat{background:#fff;border-radius:6px;padding:10px 12px;border:0.5px solid #dde2ea}
-.stlabel{font-size:9px;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
-.stval{font-size:22px;font-weight:700;line-height:1}
-.stch{font-size:10px;margin-top:3px;color:#888}
+@media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 12px;position:relative;overflow:hidden}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat.blue::before{background:var(--navy)}
+.stat.green::before{background:var(--green)}
+.stat.red::before{background:var(--red)}
+.stat.amber::before{background:var(--amber)}
+.st-label{font-family:var(--mono);font-size:8px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px}
+.st-val{font-family:var(--mono);font-size:24px;font-weight:700;line-height:1}
+.st-sub{font-size:9px;color:var(--muted);margin-top:3px}
 
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.panel{background:#fff;border-radius:6px;border:0.5px solid #dde2ea;overflow:hidden}
-.phead{padding:9px 14px;border-bottom:0.5px solid #eee;display:flex;align-items:center;justify-content:space-between;gap:8px}
-.ptitle{font-size:12px;font-weight:700;color:var(--black)}
-.pbadge{font-size:8px;font-weight:700;padding:2px 8px;border-radius:10px;letter-spacing:.04em;white-space:nowrap}
-.bg-blue{background:var(--lblue);color:#0C447C}
-.bg-red{background:var(--lred);color:#791F1F}
-.bg-green{background:var(--lgreen);color:#27500A}
-.bg-amber{background:var(--lamber);color:#633806}
-.pbody{padding:12px 14px}
+/* SECTION LABEL */
+.sec-label{font-family:var(--mono);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);padding:0 2px;margin-bottom:-4px}
 
-.hbtn-row{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
-.hbtn{font-size:10px;padding:4px 12px;border:1px solid #ccc;background:#fff;border-radius:4px;cursor:pointer;transition:all .15s;color:#444}
-.hbtn.active{background:var(--blue);border-color:var(--blue);color:#fff}
+/* TWO-COL */
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:700px){.row2{grid-template-columns:1fr}}
 
-.matrow{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:0.5px solid #f0f2f5;cursor:pointer;border-radius:3px;transition:background .1s}
-.matrow:last-child{border-bottom:none}
-.matrow:hover,.matrow.sel{background:#EBF3FB}
-.matname{font-size:11px;font-weight:600;color:var(--black);width:88px;flex-shrink:0}
-.bartrack{flex:1;height:7px;background:#eee;border-radius:2px;overflow:hidden}
-.barfill{height:7px;border-radius:2px;transition:width .35s}
-.matpct{font-size:11px;font-weight:700;width:46px;text-align:right;flex-shrink:0}
-.chip{font-size:8px;padding:2px 6px;border-radius:3px;font-weight:700;flex-shrink:0}
+/* PANEL */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.p-head{padding:8px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface2)}
+.p-title{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--text)}
+.p-badge{font-family:var(--mono);font-size:8px;padding:2px 6px;border-radius:3px;font-weight:600}
+.badge-green{background:rgba(0,107,63,.25);color:#3fb950;border:1px solid rgba(0,107,63,.4)}
+.badge-amber{background:rgba(184,134,11,.2);color:#d29922;border:1px solid rgba(184,134,11,.3)}
+.badge-red{background:rgba(204,0,1,.2);color:#f85149;border:1px solid rgba(204,0,1,.3)}
+.badge-blue{background:rgba(0,48,135,.3);color:#79c0ff;border:1px solid rgba(0,48,135,.4)}
+.p-body{padding:12px 14px}
 
-.legend-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:0.5px solid #eee}
-.leg{display:flex;align-items:center;gap:4px;font-size:9.5px;color:var(--dgrey)}
-.legdot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+/* HORIZON TABS */
+.tabs{display:flex;gap:0;margin-bottom:10px;border:1px solid var(--border);border-radius:5px;overflow:hidden}
+.tab{flex:1;padding:5px 0;font-family:var(--mono);font-size:9px;font-weight:600;text-align:center;cursor:pointer;color:var(--muted);background:var(--surface2);border:none;letter-spacing:.04em;transition:all .15s}
+.tab.active{background:var(--navy);color:#fff}
 
-.msel-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
-.msel-btn{font-size:9px;padding:3px 8px;border:1px solid #ccc;background:#fff;border-radius:3px;cursor:pointer;transition:all .15s;color:#444}
-.msel-btn.active{background:var(--blue);border-color:var(--blue);color:#fff}
+/* MATERIAL ROWS */
+.mat-row{display:grid;grid-template-columns:80px 1fr 52px 52px;gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)}
+.mat-row:last-child{border-bottom:none}
+.mat-name{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text)}
+.mat-bar-wrap{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.mat-bar{height:100%;border-radius:4px;transition:width .4s ease}
+.mat-pct{font-family:var(--mono);font-size:10px;font-weight:700;text-align:right}
+.status-chip{font-family:var(--mono);font-size:8px;font-weight:700;padding:2px 5px;border-radius:3px;text-align:center}
+.chip-normal{background:rgba(0,107,63,.2);color:#3fb950}
+.chip-watch{background:rgba(184,134,11,.2);color:#d29922}
+.chip-alert{background:rgba(204,0,1,.2);color:#f85149}
 
-.trigger-box{background:var(--lred);border:1px solid #F7C1C1;border-radius:4px;padding:8px 10px;margin-bottom:10px;display:none}
-.tb-title{font-size:11px;font-weight:700;color:#791F1F;margin-bottom:2px}
-.tb-body{font-size:10px;color:#A32D2D;line-height:1.4}
+/* CHART */
+.chart-wrap{position:relative;height:200px}
 
-.wf-row{display:flex;align-items:flex-start;justify-content:center;gap:0;padding:12px 8px;background:#F0F2F5;border-radius:4px;margin-bottom:12px;flex-wrap:wrap}
-.wf-step{display:flex;flex-direction:column;align-items:center;gap:3px}
-.wf-circle{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border:2px solid;transition:all .4s}
-.wf-label{font-size:8.5px;text-align:center;font-weight:600;color:#555;max-width:58px;line-height:1.3}
-.wf-arr{font-size:16px;color:#bbb;margin-top:10px;padding:0 3px}
+/* WORKFLOW */
+.workflow{display:flex;flex-direction:column;gap:6px}
+.wf-item{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:8px 10px;display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;transition:all .3s}
+.wf-item.active{border-color:var(--amber2);background:rgba(255,217,102,.06)}
+.wf-item.complete{border-color:#3fb950;background:rgba(63,185,80,.06)}
+.wf-num{font-family:var(--mono);font-size:10px;font-weight:700;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.wf-num.pending{background:var(--border);color:var(--muted)}
+.wf-num.active{background:var(--amber2);color:#1a1a1a}
+.wf-num.done{background:#3fb950;color:#1a1a1a}
+.wf-actor{font-family:var(--mono);font-size:9px;font-weight:700;color:var(--accent);letter-spacing:.03em}
+.wf-role{font-size:9px;color:var(--muted);margin-top:1px}
+.wf-time{font-family:var(--mono);font-size:8px;color:var(--muted)}
+.wf-arrow{text-align:center;color:var(--border);font-size:10px;margin:-2px 0}
 
-.alog{}
-.aitem{border-left:3px solid;padding:8px 10px;margin-bottom:6px;border-radius:0 4px 4px 0;background:#fff;border:0.5px solid #eee;border-left-width:3px}
-.aitem:last-child{margin-bottom:0}
-.atop{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
-.atitle{font-size:11px;font-weight:700;color:var(--black)}
-.atime{font-size:9px;color:#888}
-.abody{font-size:10px;color:#555;line-height:1.45;margin-bottom:5px}
-.aroute{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
-.rs{font-size:9px;padding:2px 7px;border-radius:3px;font-weight:600}
-.rs-done{background:var(--lgreen);color:#27500A}
-.rs-active{background:var(--blue);color:#fff}
-.rs-pend{background:#f0f2f5;color:#888}
-.rarr{font-size:10px;color:#ccc}
-
-.sim-btn{font-size:10px;padding:5px 14px;border:1px solid var(--blue);color:var(--blue);background:#fff;border-radius:4px;cursor:pointer;font-weight:600;transition:all .15s}
-.sim-btn:hover{background:var(--blue);color:#fff}
-.sim-btn.firing{background:var(--red);border-color:var(--red);color:#fff}
-
-.threshold-note{font-size:9px;color:var(--dgrey);border-left:3px solid var(--mgrey);padding-left:8px;margin-top:8px;line-height:1.5}
-
-.footer{background:var(--blue);color:rgba(255,255,255,.45);font-size:8px;padding:7px 16px;display:flex;justify-content:space-between;margin-top:2px;border-top:2px solid var(--green)}
-
-@keyframes pulseAnim{0%,100%{opacity:1}50%{opacity:.25}}
-.pulse{animation:pulseAnim .8s ease-in-out 4}
-
-@media(max-width:680px){
-  .stats{grid-template-columns:1fr 1fr}
-  .row2{grid-template-columns:1fr}
-  .stval{font-size:18px}
+/* SIMULATE BTN */
+.sim-btn{
+  width:100%;padding:9px;font-family:var(--mono);font-size:10px;font-weight:700;
+  letter-spacing:.06em;border:1px solid var(--amber2);color:var(--amber2);
+  background:rgba(255,217,102,.08);border-radius:5px;cursor:pointer;
+  transition:all .2s;margin-top:8px;text-transform:uppercase
 }
-@media(max-width:400px){
-  .stats{grid-template-columns:1fr 1fr}
-  .wf-arr{display:none}
+.sim-btn:hover{background:rgba(255,217,102,.18)}
+.sim-btn:active{transform:scale(.98)}
+
+/* ALERT LOG */
+.log-header{display:grid;grid-template-columns:70px 1fr 70px 60px;gap:6px;padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px}
+.log-col{font-family:var(--mono);font-size:8px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.log-row{display:grid;grid-template-columns:70px 1fr 70px 60px;gap:6px;padding:5px 0;border-bottom:1px solid rgba(48,54,61,.5);align-items:center}
+.log-ts{font-family:var(--mono);font-size:8px;color:var(--muted)}
+.log-desc{font-size:10px;color:var(--text)}
+.log-actor{font-family:var(--mono);font-size:8px;color:var(--accent)}
+.log-badge{font-family:var(--mono);font-size:7px;padding:1px 4px;border-radius:2px;font-weight:700}
+
+/* BEME TABLE */
+.beme-table{width:100%;border-collapse:collapse;font-size:10px}
+.beme-table th{font-family:var(--mono);font-size:8px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:4px 6px;border-bottom:1px solid var(--border);text-align:left;font-weight:600}
+.beme-table td{padding:5px 6px;border-bottom:1px solid rgba(48,54,61,.5);vertical-align:middle}
+.beme-table tr:last-child td{border-bottom:none}
+.beme-var{font-family:var(--mono);font-size:10px;font-weight:700}
+.var-pos{color:#f85149}
+.var-neg{color:#3fb950}
+.var-neu{color:var(--muted)}
+.threshold-flag{font-family:var(--mono);font-size:7px;padding:1px 4px;border-radius:2px;background:rgba(204,0,1,.2);color:#f85149;border:1px solid rgba(204,0,1,.3)}
+
+/* JIT SECTION */
+.jit-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:8px 0}
+.jit-week{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:6px 4px;text-align:center}
+.jit-week.pour{border-color:var(--navy);background:rgba(0,48,135,.2)}
+.jit-week.order{border-color:var(--green);background:rgba(0,107,63,.1)}
+.jit-wk{font-family:var(--mono);font-size:7px;color:var(--muted);margin-bottom:2px}
+.jit-label{font-size:8px;font-weight:600;color:var(--text)}
+.jit-vol{font-family:var(--mono);font-size:9px;font-weight:700;color:var(--accent);margin-top:2px}
+.jit-arrow{text-align:center;color:var(--green);font-size:10px;margin-top:4px}
+
+/* ROUTING CHAIN */
+.chain{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin:8px 0;padding:8px 10px;background:var(--surface2);border-radius:5px;border:1px solid var(--border)}
+.chain-node{font-family:var(--mono);font-size:9px;font-weight:700;padding:3px 8px;border-radius:3px;white-space:nowrap}
+.chain-arrow{color:var(--muted);font-size:10px}
+.cn-daw{background:rgba(0,48,135,.3);color:#79c0ff;border:1px solid rgba(0,48,135,.4)}
+.cn-cce{background:rgba(0,107,63,.25);color:#3fb950;border:1px solid rgba(0,107,63,.35)}
+.cn-bpp{background:rgba(184,134,11,.2);color:#d29922;border:1px solid rgba(184,134,11,.3)}
+.cn-fec{background:rgba(204,0,1,.2);color:#f85149;border:1px solid rgba(204,0,1,.3)}
+
+/* FOOTER */
+.footer{background:var(--surface);border-top:1px solid var(--border);padding:8px 16px;text-align:center}
+.footer p{font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:.04em}
+
+/* BREACH ANIMATION */
+@keyframes breach-flash{0%,100%{background:var(--surface)}50%{background:rgba(204,0,1,.12)}}
+.breaching{animation:breach-flash .4s ease 3}
+
+/* MAP STYLES */
+.state-shape{fill:#1e3a52;stroke:#30363d;stroke-width:0.8;cursor:pointer;transition:fill .18s,stroke .18s}
+.state-shape:hover{stroke:#58a6ff;stroke-width:1.4}
+.state-shape.red-flag{fill:#3d1010}
+.state-shape.red-flag:hover{fill:#5a1818}
+.state-shape.amber-flag{fill:#2e2208}
+.state-shape.amber-flag:hover{fill:#4a3610}
+.state-shape.green-flag{fill:#0a2415}
+.state-shape.green-flag:hover{fill:#123d22}
+
+/* TOOLTIP */
+#ngTooltip{
+  position:fixed;display:none;z-index:9999;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;width:272px;
+  box-shadow:0 10px 40px rgba(0,0,0,.7);
+  pointer-events:none;overflow:hidden;font-size:11px;
 }
+.tt-head{padding:8px 11px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tt-state{font-family:var(--mono);font-size:11px;font-weight:700;color:#fff}
+.tt-flag{font-family:var(--mono);font-size:8px;font-weight:700;padding:2px 7px;border-radius:3px;white-space:nowrap}
+.tt-flag.red{background:rgba(204,0,1,.35);color:#f85149;border:1px solid rgba(204,0,1,.5)}
+.tt-flag.amber{background:rgba(184,134,11,.28);color:#d29922;border:1px solid rgba(184,134,11,.45)}
+.tt-flag.green{background:rgba(0,107,63,.3);color:#3fb950;border:1px solid rgba(0,107,63,.5)}
+.tt-body{padding:5px 11px 10px}
+.tt-row{display:grid;grid-template-columns:16px 1fr;gap:5px;align-items:start;margin-bottom:6px}
+.tt-icon{font-size:10px;margin-top:1px}
+.tt-label{font-family:var(--mono);font-size:7px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px}
+.tt-text{font-size:9.5px;color:var(--text);line-height:1.35}
+.tt-divider{height:1px;background:var(--border);margin:4px 0}
+.tt-cost{font-family:var(--mono);font-size:11px;font-weight:700}
+.tt-cost.red{color:#f85149}
+.tt-cost.amber{color:#d29922}
+.tt-cost.green{color:#3fb950}
 </style>
 </head>
 <body>
 
+<!-- HEADER -->
 <div class="header">
-  <div class="hlogo">
-    <div class="hbar" style="background:var(--green)"></div>
-    <div class="hbar" style="background:var(--red)"></div>
+  <div class="h-left">
+    <div class="h-bar"></div>
     <div>
-      <div class="htitle">Contractor Intelligence Dashboard</div>
-      <div class="hsub">Nigerian Army Special Projects &nbsp;|&nbsp; AI Price Index &amp; Alert Platform</div>
+      <div class="h-title">NASP CONTRACTOR COST INTELLIGENCE</div>
+      <div class="h-sub">IRON ROD PRICE INDEX  |  DAW · CCE · BPP PROCUREMENT WORKFLOW  |  PMW 2026 DEMO</div>
     </div>
   </div>
-  <div class="hmeta">
-    <div>Updated: <span id="clock">--</span></div>
-    <div>FY 2026 &nbsp;|&nbsp; All Formations</div>
-    <div class="hrestr">ILLUSTRATIVE &nbsp;|&nbsp; PMW 2026</div>
+  <div class="h-right">
+    <div class="h-restricted">RESTRICTED</div>
+    <div class="h-meta"><span class="live-dot"></span>LIVE DEMO  |  NASME MAKURDI  |  13 MAY 2026</div>
   </div>
 </div>
 
 <div class="body">
 
+  <!-- STAT CARDS -->
   <div class="stats">
-    <div class="stat">
-      <div class="stlabel">Active Projects</div>
-      <div class="stval" style="color:var(--blue)">47</div>
-      <div class="stch">Across 12 formations</div>
+    <div class="stat blue">
+      <div class="st-label">Active Projects</div>
+      <div class="st-val" id="statProjects">12</div>
+      <div class="st-sub">Across 4 formations</div>
     </div>
-    <div class="stat">
-      <div class="stlabel">Live Alerts</div>
-      <div class="stval" id="alertCount" style="color:var(--red)">3</div>
-      <div class="stch" id="alertSub">2 amber &nbsp;·&nbsp; 1 red</div>
+    <div class="stat red">
+      <div class="st-label">Live Alerts</div>
+      <div class="st-val" id="statAlerts">3</div>
+      <div class="st-sub">Requiring DAW action</div>
     </div>
-    <div class="stat">
-      <div class="stlabel">Materials Tracked</div>
-      <div class="stval" style="color:var(--blue)">6</div>
-      <div class="stch">Nightly price ingestion</div>
+    <div class="stat green">
+      <div class="st-label">Materials Tracked</div>
+      <div class="st-val">6</div>
+      <div class="st-sub">BEME categories</div>
     </div>
-    <div class="stat">
-      <div class="stlabel">Avg 30-Day Drift</div>
-      <div class="stval" id="avgDrift" style="color:var(--red)">+6.4%</div>
-      <div class="stch">Above neutral baseline</div>
+    <div class="stat amber">
+      <div class="st-label">Avg 30-Day Drift</div>
+      <div class="st-val" id="statDrift">+4.1%</div>
+      <div class="st-sub">Iron rod driving drift</div>
     </div>
   </div>
 
+  <!-- ROW 1: Price Index + Chart -->
+    <!-- IRON ROD CONTEXT BANNER -->
+  <div style="background:linear-gradient(135deg,#1a0505 0%,#7B1010 100%);border-radius:6px;padding:10px 16px;border:1px solid rgba(248,81,73,.3);display:flex;align-items:center;justify-content:space-between;gap:16px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="font-family:var(--mono);font-size:9px;font-weight:700;color:#f85149;letter-spacing:.1em;white-space:nowrap">⬆ LIVE ALERT</div>
+      <div>
+        <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:#fff">IRON ROD (12mm &amp; 16mm)  —  FEATURED COMMODITY</div>
+        <div style="font-size:9px;color:rgba(255,255,255,.6);margin-top:2px">Primary structural reinforcement material  |  Barracks Project A  |  BOQ lines: ₦38.4M (12mm) + ₦29.6M (16mm) = ₦68.0M combined exposure</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:16px;flex-shrink:0">
+      <div style="text-align:center">
+        <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:#f85149">+12.6%</div>
+        <div style="font-size:8px;color:rgba(255,255,255,.5);font-family:var(--mono)">30-DAY DRIFT</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:#f85149">+21.4%</div>
+        <div style="font-size:8px;color:rgba(255,255,255,.5);font-family:var(--mono)">90-DAY FORECAST</div>
+      </div>
+      <div style="text-align:center;padding:4px 10px;background:rgba(248,81,73,.2);border-radius:4px;border:1px solid rgba(248,81,73,.4)">
+        <div style="font-family:var(--mono);font-size:9px;font-weight:700;color:#f85149">DRIVERS</div>
+        <div style="font-size:8px;color:rgba(255,255,255,.6);line-height:1.5">Naira/USD exchange rate<br>Scrap metal import costs<br>DPC energy tariff increases</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-label">AI PREDICTIVE PRICE INDEX  —  BOQ MATERIAL CATEGORIES</div>
   <div class="row2">
 
+    <!-- PRICE INDEX PANEL -->
     <div class="panel">
-      <div class="phead">
-        <span class="ptitle">AI Price Index — Material Forecast</span>
-        <span class="pbadge bg-blue">LIVE MODEL</span>
+      <div class="p-head">
+        <span class="p-title">MATERIAL PRICE INDEX</span>
+        <div class="tabs" id="horizonTabs">
+          <button class="tab active" onclick="setHorizon(0,this)">30-DAY</button>
+          <button class="tab" onclick="setHorizon(1,this)">60-DAY</button>
+          <button class="tab" onclick="setHorizon(2,this)">90-DAY</button>
+        </div>
       </div>
-      <div class="pbody">
-        <div class="hbtn-row" id="horizonBtns">
-          <button class="hbtn active" onclick="setHorizon(30,this)">30 days</button>
-          <button class="hbtn" onclick="setHorizon(60,this)">60 days</button>
-          <button class="hbtn" onclick="setHorizon(90,this)">90 days</button>
-        </div>
-        <div id="matList"></div>
-        <div class="legend-row">
-          <div class="leg"><div class="legdot" style="background:var(--lgreen);border:1px solid #97C459"></div>Within ±5% — normal</div>
-          <div class="leg"><div class="legdot" style="background:var(--lamber);border:1px solid #EF9F27"></div>5–10% — watch</div>
-          <div class="leg"><div class="legdot" style="background:var(--lred);border:1px solid #F09595"></div>&gt;10% — alert</div>
-        </div>
+      <div class="p-body" id="indexPanel">
+        <!-- populated by JS -->
       </div>
     </div>
 
+    <!-- FORECAST CHART -->
     <div class="panel">
-      <div class="phead">
-        <span class="ptitle">Forecast Chart — <span id="chartMatName">Steel Rods</span></span>
-        <span class="pbadge bg-blue" id="chartMatBadge">Steel Rods</span>
+      <div class="p-head">
+        <span class="p-title">PRICE FORECAST CHART</span>
+        <span class="p-badge badge-red">IRON ROD ALERT</span>
       </div>
-      <div class="pbody" style="padding-bottom:8px">
-        <div class="msel-row" id="matSelBtns"></div>
-        <div style="position:relative;width:100%;height:195px">
-          <canvas id="forecastChart" role="img" aria-label="Line chart of material price forecast over 90 days">Forecast chart for selected material showing historical actuals and 30/60/90-day price projections.</canvas>
+      <div class="p-body">
+        <div class="chain" style="margin-bottom:8px">
+          <span class="chain-node cn-daw">DAW</span>
+          <span class="chain-arrow">→</span>
+          <span class="chain-node cn-cce">CCE</span>
+          <span class="chain-arrow">→</span>
+          <span class="chain-node cn-bpp">BPP DESK</span>
+          <span class="chain-arrow">→</span>
+          <span class="chain-node cn-fec">FEC (if ≥₦100M)</span>
         </div>
-        <div class="legend-row" style="margin-top:6px">
-          <div class="leg"><div class="legdot" style="background:var(--blue)"></div>Actual</div>
-          <div class="leg"><div class="legdot" style="background:var(--green);border:1px dashed var(--green)"></div>30-day</div>
-          <div class="leg"><div class="legdot" style="background:var(--amber);border:1px dashed var(--amber)"></div>60-day</div>
-          <div class="leg"><div class="legdot" style="background:var(--red);border:1px dashed var(--red)"></div>90-day</div>
+        <div class="chart-wrap">
+          <canvas id="forecastChart"></canvas>
+        </div>
+        <div style="font-size:8px;color:var(--muted);margin-top:4px;font-family:var(--mono)">
+          Iron rod (12mm) price index — ± 5% threshold. Breach triggers Power Automate workflow to DAW → CCE → BPP. Driven by forex volatility, scrap metal costs and energy tariffs.
         </div>
       </div>
     </div>
 
   </div>
 
-  <div class="panel">
-    <div class="phead">
-      <span class="ptitle">Power Automate Alert Workflow — Live Log</span>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span class="pbadge bg-red" id="wfStatus">MONITORING</span>
-        <button class="sim-btn" id="simBtn" onclick="triggerAlert()">Simulate breach</button>
+  <!-- ROW 2: JIT Concrete + Nigeria Geotechnical Map -->
+  <div class="sec-label">JIT CONCRETE PROCUREMENT · GEOTECHNICAL SITE RISK MAP — NIGERIA</div>
+  <div class="row2">
+
+    <!-- JIT CONCRETE (matching PPT slide 5) -->
+    <div class="panel">
+      <div class="p-head">
+        <span class="p-title">AI JUST-IN-TIME CONCRETE — 12-WEEK POUR SCHEDULE</span>
+        <span class="p-badge badge-green">ZERO WASTAGE</span>
+      </div>
+      <div class="p-body">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.5">
+          Concrete cannot be bulk-ordered. AI calculates exact volume per pour phase — factoring cure time, site conditions and 28-day setting cycle. Each batch ordered <strong style="color:var(--text)">72 hours before</strong> the pour. No stockpiling. No caking.
+        </div>
+
+        <div class="jit-grid">
+          <div class="jit-week pour">
+            <div class="jit-wk">WK 2</div>
+            <div class="jit-label">Foundation Pour</div>
+            <div class="jit-vol">3.2 m³</div>
+            <div class="jit-arrow">↑ 72h</div>
+          </div>
+          <div class="jit-week pour">
+            <div class="jit-wk">WK 5</div>
+            <div class="jit-label">Slab Pour Ph.1</div>
+            <div class="jit-vol">2.1 m³</div>
+            <div class="jit-arrow">↑ 72h</div>
+          </div>
+          <div class="jit-week pour">
+            <div class="jit-wk">WK 8</div>
+            <div class="jit-label">Slab Pour Ph.2</div>
+            <div class="jit-vol">2.4 m³</div>
+            <div class="jit-arrow">↑ 72h</div>
+          </div>
+          <div class="jit-week pour">
+            <div class="jit-wk">WK 10</div>
+            <div class="jit-label">Column Pour</div>
+            <div class="jit-vol">1.8 m³</div>
+            <div class="jit-arrow">↑ 72h</div>
+          </div>
+          <div class="jit-week pour">
+            <div class="jit-wk">WK 12</div>
+            <div class="jit-label">Finishing Pour</div>
+            <div class="jit-vol">1.1 m³</div>
+            <div class="jit-arrow">↑ 72h</div>
+          </div>
+        </div>
+
+        <div style="margin:8px 0 4px;padding:7px 10px;background:rgba(204,0,1,.08);border-radius:4px;border:1px solid rgba(204,0,1,.2)">
+          <div style="font-family:var(--mono);font-size:8px;color:#f85149;font-weight:700;margin-bottom:3px">WITHOUT AI — BULK ORDER</div>
+          <div style="font-size:9px;color:rgba(255,255,255,.6)">Bulk cement ordered at project start → stored for months → moisture absorption → bags cake → write-off cost charged to BOQ → variation request raised → value for money lost</div>
+        </div>
+        <div style="padding:7px 10px;background:rgba(0,107,63,.1);border-radius:4px;border:1px solid rgba(0,107,63,.3)">
+          <div style="font-family:var(--mono);font-size:8px;color:#3fb950;font-weight:700;margin-bottom:3px">WITH AI — JIT RESULT</div>
+          <div style="font-size:9px;color:rgba(255,255,255,.6)">Zero cement stored between pours · Each batch fresh and within specification · No caking · No write-off cost</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px">
+          <div style="background:rgba(204,0,1,.15);border:1px solid rgba(204,0,1,.3);border-radius:4px;padding:7px 8px;text-align:center">
+            <div style="font-family:var(--mono);font-size:15px;font-weight:700;color:#f85149">−₦14.2M</div>
+            <div style="font-size:8px;color:var(--muted);margin-top:2px">Bulk net loss (−7.1%)</div>
+          </div>
+          <div style="background:rgba(0,107,63,.15);border:1px solid rgba(0,107,63,.3);border-radius:4px;padding:7px 8px;text-align:center">
+            <div style="font-family:var(--mono);font-size:15px;font-weight:700;color:#3fb950">+₦16.0M</div>
+            <div style="font-size:8px;color:var(--muted);margin-top:2px">JIT net saving (+8.0%)</div>
+          </div>
+          <div style="background:rgba(0,48,135,.2);border:1px solid rgba(0,48,135,.4);border-radius:4px;padding:7px 8px;text-align:center">
+            <div style="font-family:var(--mono);font-size:15px;font-weight:700;color:#79c0ff">₦30.2M</div>
+            <div style="font-size:8px;color:var(--muted);margin-top:2px">JIT advantage (+15.1%)</div>
+          </div>
+        </div>
+        <div style="font-size:8px;color:var(--muted);margin-top:5px;font-style:italic">Based on ₦200M barracks reconstruction contract. See Slide 5 for full calculation.</div>
       </div>
     </div>
-    <div class="pbody">
-      <div class="trigger-box" id="triggerBox">
-        <div class="tb-title" id="triggerTitle">THRESHOLD BREACH DETECTED</div>
-        <div class="tb-body" id="triggerBody">Cement index crossed +10.2% — Power Automate workflow firing now...</div>
+
+    <!-- NIGERIA GEOTECHNICAL MAP -->
+    <div class="panel">
+      <div class="p-head">
+        <span class="p-title">NIGERIA — GEOTECHNICAL SITE RISK BY STATE</span>
+        <span class="p-badge badge-amber">HOVER A STATE</span>
       </div>
-      <div class="wf-row">
-        <div class="wf-step">
-          <div class="wf-circle" id="wf1" style="background:var(--lred);border-color:var(--red);color:#791F1F">
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 2L13.5 13H1.5L7.5 2Z" fill="#791F1F"/></svg>
+      <div id="mapContainer" style="position:relative;background:var(--surface2)">
+        <svg id="mapSvg" viewBox="0 0 600 520" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block">
+
+          <!-- NORTH WEST -->
+          <path class="state-shape amber-flag" data-state="Sokoto" d="M 74.2,89.8 101.4,87.1 126.1,116.7 148.4,122.1 165.7,120.5 188.0,130.1 205.3,147.3 215.2,138.2 237.4,114.0 249.8,92.5 257.2,59.2 237.4,28.0 210.2,2.7 180.5,2.7 155.8,14.5 126.1,46.8 101.4,49.5 74.2,73.7 Z"/>
+          <path class="state-shape amber-flag" data-state="Zamfara" d="M 188.0,130.1 205.3,147.3 215.2,138.2 237.4,114.0 249.8,92.5 257.2,59.2 299.3,62.9 314.1,73.7 324.0,96.8 311.6,138.2 277.0,166.7 232.5,168.9 212.7,157.0 Z"/>
+          <path class="state-shape amber-flag" data-state="Kebbi" d="M 26.2,140.9 44.5,114.0 74.2,89.8 74.2,73.7 101.4,49.5 101.4,87.1 126.1,116.7 148.4,122.1 165.7,120.5 188.0,130.1 212.7,157.0 202.8,200.0 183.0,216.2 153.3,221.6 111.3,210.8 76.7,209.7 51.9,204.3 34.6,183.9 26.2,157.0 Z"/>
+          <path class="state-shape green-flag" data-state="Katsina" d="M 237.4,28.0 257.2,59.2 299.3,62.9 314.1,73.7 324.0,96.8 344.8,100.6 353.7,73.7 375.9,76.4 415.5,48.4 413.0,23.7 390.8,0.0 353.7,1.1 314.1,2.2 289.4,2.2 252.3,2.2 210.2,2.7 Z"/>
+          <path class="state-shape green-flag" data-state="Kano" d="M 324.0,96.8 344.8,100.6 353.7,73.7 375.9,76.4 415.5,48.4 453.6,91.4 423.9,127.4 389.3,145.2 353.7,139.8 325.0,118.3 311.6,138.2 Z"/>
+          <path class="state-shape green-flag" data-state="Jigawa" d="M 353.7,73.7 375.9,76.4 415.5,48.4 453.6,91.4 483.3,64.5 511.0,43.0 488.2,21.5 462.5,2.2 413.0,23.7 390.8,0.0 Z"/>
+          <path class="state-shape amber-flag" data-state="Kaduna" d="M 202.8,200.0 212.7,157.0 232.5,168.9 277.0,166.7 311.6,138.2 325.0,118.3 353.7,139.8 389.3,145.2 374.4,188.2 339.8,220.5 305.2,236.6 267.1,252.7 231.0,236.6 207.7,221.6 Z"/>
+
+          <!-- NORTH EAST -->
+          <path class="state-shape green-flag" data-state="Jigawa" d="M 453.6,91.4 483.3,64.5 511.0,43.0 488.2,21.5 462.5,2.2 413.0,23.7 415.5,48.4 453.6,91.4 Z"/>
+          <path class="state-shape red-flag" data-state="Yobe" d="M 453.6,91.4 483.3,64.5 511.0,43.0 551.5,0.0 585.2,29.0 592.1,76.4 566.4,97.9 532.7,111.3 504.5,127.4 474.9,129.1 453.6,112.9 423.9,127.4 Z"/>
+          <path class="state-shape red-flag" data-state="Borno" d="M 511.0,43.0 551.5,0.0 585.2,29.0 592.1,76.4 598.5,157.0 597.0,209.7 587.1,237.7 554.0,221.6 514.4,199.0 488.2,166.7 488.2,129.1 504.5,127.4 532.7,111.3 566.4,97.9 592.1,76.4 Z"/>
+          <path class="state-shape amber-flag" data-state="Gombe" d="M 389.3,145.2 423.9,127.4 453.6,112.9 474.9,129.1 488.2,166.7 465.0,199.0 438.7,209.7 414.0,193.6 389.3,166.7 Z"/>
+          <path class="state-shape amber-flag" data-state="Bauchi" d="M 339.8,220.5 374.4,188.2 389.3,145.2 389.3,166.7 414.0,193.6 438.7,209.7 465.0,199.0 488.2,166.7 514.4,199.0 514.4,236.6 488.2,263.5 453.6,274.3 414.0,263.5 374.4,252.7 Z"/>
+          <path class="state-shape red-flag" data-state="Adamawa" d="M 488.2,166.7 514.4,199.0 554.0,221.6 587.1,237.7 597.0,288.8 572.3,344.2 552.5,369.4 522.8,344.2 503.1,306.5 479.8,263.5 488.2,220.5 Z"/>
+          <path class="state-shape red-flag" data-state="Taraba" d="M 374.4,252.7 414.0,263.5 453.6,274.3 488.2,263.5 514.4,236.6 514.4,199.0 488.2,220.5 479.8,263.5 503.1,306.5 522.8,344.2 503.1,369.4 465.0,381.8 438.7,360.3 415.5,344.2 389.3,328.0 366.0,290.4 364.6,263.5 Z"/>
+
+          <!-- NORTH CENTRAL -->
+          <path class="state-shape amber-flag" data-state="Niger" d="M 34.6,183.9 51.9,204.3 76.7,209.7 111.3,210.8 153.3,221.6 183.0,216.2 202.8,200.0 207.7,221.6 231.0,236.6 267.1,252.7 255.7,290.4 226.1,315.7 191.4,328.0 158.3,315.7 127.1,290.4 107.3,261.9 77.7,236.6 57.9,220.5 Z"/>
+          <path class="state-shape green-flag" data-state="Kwara" d="M 57.9,220.5 77.7,236.6 107.3,261.9 127.1,290.4 158.3,315.7 191.4,328.0 226.1,315.7 255.7,290.4 242.4,344.2 216.2,369.4 191.4,381.8 156.8,369.4 127.1,344.2 92.5,315.7 67.8,290.4 57.9,264.6 Z"/>
+          <path class="state-shape green-flag" data-state="FCT" d="M 216.2,261.9 242.4,252.7 267.1,252.7 305.2,236.6 305.2,288.8 290.4,315.7 267.1,328.0 240.9,328.0 226.1,306.5 216.2,290.4 Z"/>
+          <path class="state-shape amber-flag" data-state="Nassarawa" d="M 267.1,252.7 305.2,236.6 339.8,220.5 374.4,252.7 364.6,290.4 364.6,315.7 339.8,328.0 315.1,315.7 290.4,315.7 305.2,288.8 Z"/>
+          <path class="state-shape amber-flag" data-state="Plateau" d="M 339.8,220.5 374.4,188.2 374.4,252.7 364.6,263.5 364.6,290.4 389.3,328.0 415.5,344.2 438.7,360.3 465.0,381.8 438.7,397.9 415.5,381.8 389.3,360.3 364.6,344.2 339.8,328.0 364.6,315.7 364.6,290.4 374.4,252.7 Z"/>
+          <path class="state-shape green-flag" data-state="Kogi" d="M 156.8,315.7 191.4,328.0 226.1,315.7 255.7,290.4 267.1,306.5 267.1,318.3 290.4,315.7 267.1,344.2 255.7,369.4 242.4,397.9 216.2,396.3 191.4,381.8 168.2,369.4 156.8,344.2 Z"/>
+          <path class="state-shape amber-flag" data-state="Benue" d="M 267.1,252.7 305.2,236.6 339.8,220.5 374.4,252.7 364.6,263.5 364.6,290.4 339.8,328.0 315.1,315.7 290.4,315.7 267.1,318.3 267.1,306.5 255.7,290.4 Z"/>
+
+          <!-- SOUTH WEST -->
+          <path class="state-shape green-flag" data-state="Oyo" d="M 57.9,264.6 67.8,290.4 92.5,315.7 127.1,344.2 156.8,344.2 168.2,369.4 143.4,369.4 117.2,380.2 92.5,369.4 69.2,344.2 57.9,315.7 Z"/>
+          <path class="state-shape green-flag" data-state="Osun" d="M 92.5,369.4 117.2,380.2 143.4,369.4 168.2,369.4 191.4,381.8 191.4,414.1 168.2,435.6 142.0,424.8 117.2,414.1 108.8,396.3 Z"/>
+          <path class="state-shape green-flag" data-state="Ogun" d="M 2.5,385.6 18.3,344.2 43.0,328.0 57.9,315.7 67.8,344.2 92.5,369.4 108.8,396.3 92.5,435.6 67.8,435.6 43.0,423.2 9.9,403.3 Z"/>
+          <path class="state-shape green-flag" data-state="Lagos" d="M 2.5,403.3 9.9,403.3 43.0,423.2 67.8,435.6 56.9,451.7 34.6,451.7 13.4,442.0 2.5,425.9 Z"/>
+          <path class="state-shape amber-flag" data-state="Ekiti" d="M 108.8,396.3 117.2,414.1 142.0,424.8 168.2,435.6 191.4,414.1 191.4,381.8 168.2,369.4 Z"/>
+          <path class="state-shape amber-flag" data-state="Ondo" d="M 143.4,369.4 156.8,344.2 168.2,369.4 216.2,369.4 242.4,397.9 226.1,423.2 206.3,435.6 191.4,435.6 168.2,435.6 142.0,424.8 117.2,414.1 108.8,396.3 143.4,369.4 Z"/>
+
+          <!-- SOUTH SOUTH -->
+          <path class="state-shape red-flag" data-state="Edo" d="M 142.0,344.2 156.8,344.2 168.2,369.4 191.4,381.8 191.4,414.1 168.2,435.6 156.8,451.7 142.0,451.7 128.6,435.6 117.2,414.1 117.2,380.2 128.6,360.3 Z"/>
+          <path class="state-shape red-flag" data-state="Delta" d="M 92.5,369.4 108.8,396.3 117.2,414.1 128.6,435.6 142.0,451.7 156.8,451.7 143.4,466.2 128.6,478.6 108.8,487.7 92.5,477.0 87.6,457.1 102.4,435.6 92.5,435.6 Z"/>
+          <path class="state-shape red-flag" data-state="Bayelsa" d="M 87.6,457.1 92.5,477.0 108.8,487.7 128.6,478.6 143.4,466.2 143.4,489.3 128.6,505.5 112.3,510.9 92.5,510.9 79.1,494.7 Z"/>
+          <path class="state-shape red-flag" data-state="Rivers" d="M 143.4,451.7 156.8,451.7 191.4,435.6 206.3,435.6 217.6,460.3 176.6,467.8 156.8,467.8 143.4,489.3 143.4,466.2 156.8,451.7 Z"/>
+          <path class="state-shape red-flag" data-state="Akwa Ibom" d="M 240.9,478.6 267.1,489.3 290.4,478.6 305.2,478.6 306.7,505.5 277.0,516.2 255.7,516.2 240.9,505.5 Z"/>
+          <path class="state-shape red-flag" data-state="Cross River" d="M 267.1,344.2 290.4,315.7 315.1,315.7 339.8,328.0 364.6,344.2 389.3,360.3 365.0,397.9 339.8,423.2 316.6,451.7 305.2,478.6 290.4,478.6 267.1,460.8 255.7,450.1 267.1,414.1 290.4,397.9 290.4,369.4 267.1,344.2 Z"/>
+
+          <!-- SOUTH EAST -->
+          <path class="state-shape amber-flag" data-state="Anambra" d="M 191.4,414.1 216.2,396.3 240.9,397.9 255.7,423.2 240.9,451.7 216.2,451.7 206.3,435.6 191.4,435.6 Z"/>
+          <path class="state-shape amber-flag" data-state="Enugu" d="M 216.2,369.4 242.4,397.9 255.7,369.4 267.1,344.2 290.4,369.4 290.4,397.9 267.1,414.1 255.7,423.2 240.9,397.9 216.2,396.3 Z"/>
+          <path class="state-shape amber-flag" data-state="Imo" d="M 191.4,435.6 206.3,435.6 216.2,451.7 240.9,451.7 240.9,478.6 217.6,489.3 191.4,489.3 176.6,467.8 217.6,460.3 206.3,435.6 Z"/>
+          <path class="state-shape red-flag" data-state="Ebonyi" d="M 255.7,423.2 267.1,414.1 290.4,397.9 305.2,423.2 290.4,450.1 267.1,460.8 255.7,450.1 240.9,451.7 Z"/>
+          <path class="state-shape red-flag" data-state="Abia" d="M 240.9,451.7 255.7,450.1 267.1,460.8 290.4,450.1 290.4,478.6 267.1,489.3 240.9,478.6 Z"/>
+
+          <!-- State name labels -->
+          <text x="155" y="70"  font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Sokoto</text>
+          <text x="248" y="140" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Zamfara</text>
+          <text x="115" y="190" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Kebbi</text>
+          <text x="320" y="55"  font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Katsina</text>
+          <text x="400" y="115" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Kano</text>
+          <text x="468" y="55"  font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Jigawa</text>
+          <text x="290" y="205" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Kaduna</text>
+          <text x="520" y="115" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Yobe</text>
+          <text x="545" y="175" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Borno</text>
+          <text x="435" y="185" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Gombe</text>
+          <text x="435" y="245" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Bauchi</text>
+          <text x="540" y="295" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Adamawa</text>
+          <text x="445" y="330" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Taraba</text>
+          <text x="150" y="265" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Niger</text>
+          <text x="145" y="345" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Kwara</text>
+          <text x="262" y="295" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">FCT</text>
+          <text x="330" y="285" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Nassarawa</text>
+          <text x="400" y="350" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Plateau</text>
+          <text x="218" y="370" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Kogi</text>
+          <text x="315" y="295" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Benue</text>
+          <text x="100" y="330" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Oyo</text>
+          <text x="148" y="408" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Osun</text>
+          <text x="55" y="400" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Ogun</text>
+          <text x="32" y="438" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Lagos</text>
+          <text x="148" y="375" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Ekiti</text>
+          <text x="188" y="350" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Ondo</text>
+          <text x="140" y="405" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Edo</text>
+          <text x="110" y="448" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Delta</text>
+          <text x="112" y="490" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Bayelsa</text>
+          <text x="172" y="465" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Rivers</text>
+          <text x="275" y="500" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Akwa Ibom</text>
+          <text x="315" y="415" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Cross River</text>
+          <text x="220" y="438" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Anambra</text>
+          <text x="257" y="400" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Enugu</text>
+          <text x="210" y="472" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Imo</text>
+          <text x="272" y="440" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Ebonyi</text>
+          <text x="262" y="475" font-size="7.5" fill="rgba(255,255,255,.55)" text-anchor="middle" font-family="monospace">Abia</text>
+
+          <!-- Abuja dot -->
+          <circle cx="263" cy="298" r="4" fill="#FFD966" opacity=".9"/>
+          <text x="270" y="296" font-size="8" fill="#FFD966" font-family="monospace" font-weight="bold">Abuja</text>
+        </svg>
+
+        <div style="display:flex;gap:10px;padding:8px 12px;border-top:1px solid var(--border);background:var(--surface2);flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:5px;font-size:8px;color:var(--muted)">
+            <div style="width:10px;height:10px;border-radius:2px;background:#4a1515;border:1px solid #f85149;flex-shrink:0"></div>HIGH RISK — Complex soils, logistics premium, multiple specialist tests
           </div>
-          <div class="wf-label" style="color:#791F1F">Breach<br>detected</div>
-        </div>
-        <div class="wf-arr" id="arr1">&#8594;</div>
-        <div class="wf-step">
-          <div class="wf-circle" id="wf2" style="background:#F0F2F5;border-color:#ccc;color:#888">PO</div>
-          <div class="wf-label">Project<br>Officer</div>
-        </div>
-        <div class="wf-arr" id="arr2">&#8594;</div>
-        <div class="wf-step">
-          <div class="wf-circle" id="wf3" style="background:#F0F2F5;border-color:#ccc;color:#888">RE</div>
-          <div class="wf-label">Resident<br>Engineer</div>
-        </div>
-        <div class="wf-arr" id="arr3">&#8594;</div>
-        <div class="wf-step">
-          <div class="wf-circle" id="wf4" style="background:#F0F2F5;border-color:#ccc;color:#888">DP</div>
-          <div class="wf-label">DProc<br>Desk</div>
-        </div>
-        <div class="wf-arr" id="arr4">&#8594;</div>
-        <div class="wf-step">
-          <div class="wf-circle" id="wf5" style="background:#F0F2F5;border-color:#ccc;color:#888">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7L6 11L12 3" stroke="#888" stroke-width="2" stroke-linecap="round"/></svg>
+          <div style="display:flex;align-items:center;gap:5px;font-size:8px;color:var(--muted)">
+            <div style="width:10px;height:10px;border-radius:2px;background:#3a2c0a;border:1px solid #d29922;flex-shrink:0"></div>MODERATE — Elevated testing, seasonal access issues
           </div>
-          <div class="wf-label">Audit<br>logged</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:8px;color:var(--muted)">
+            <div style="width:10px;height:10px;border-radius:2px;background:#0d2e1a;border:1px solid #3fb950;flex-shrink:0"></div>STANDARD — Routine geotechnical assessment, normal logistics
+          </div>
         </div>
       </div>
-      <div id="alertLog"></div>
     </div>
+
   </div>
 
+</div><!-- /body -->
+
+
+<!-- NIGERIA MAP TOOLTIP -->
+<div id="ngTooltip">
+  <div class="tt-head" id="ttHead">
+    <span class="tt-state" id="ttState">—</span>
+    <span class="tt-flag green" id="ttFlag">—</span>
+  </div>
+  <div class="tt-body">
+    <div class="tt-row">
+      <div class="tt-icon">🪨</div>
+      <div><div class="tt-label">Soil Classification</div><div class="tt-text" id="ttSoil">—</div></div>
+    </div>
+    <div class="tt-divider"></div>
+    <div class="tt-row">
+      <div class="tt-icon">🔬</div>
+      <div><div class="tt-label">Tests Required</div><div class="tt-text" id="ttTests">—</div></div>
+    </div>
+    <div class="tt-divider"></div>
+    <div class="tt-row">
+      <div class="tt-icon">🚛</div>
+      <div><div class="tt-label">Logistics Premium</div><div class="tt-cost green" id="ttLogistics">—</div></div>
+    </div>
+    <div class="tt-divider"></div>
+    <div class="tt-row">
+      <div class="tt-icon">⚠️</div>
+      <div><div class="tt-label">Key Risk</div><div class="tt-text" id="ttRisk">—</div></div>
+    </div>
+  </div>
 </div>
 
+<!-- FOOTER -->
 <div class="footer">
-  <span>Data ingestion: nightly 23:00 WAT &nbsp;|&nbsp; AI Price Index v2.1 &nbsp;|&nbsp; Threshold: ±5% variance</span>
-  <span>ILLUSTRATIVE ONLY — PMW 2026 &nbsp;|&nbsp; NASME Makurdi</span>
+  <p>NASP CONTRACTOR COST INTELLIGENCE DASHBOARD  |  DEMO BUILD  |  NA PMW 2026  |  NASME MAKURDI  |  REF: NASP/G5/220/85  |  RESTRICTED</p>
+  <p style="margin-top:2px">Data is illustrative. All AI outputs require review and confirmation by accountable officer (DAW) before action is taken.  NDPR 2019 · NDPA 2023 · FIRS 2024 compliant.</p>
 </div>
 
 <script>
-const materials=[
-  {name:'Steel Rods',   d30:8.2,  d60:12.4, d90:17.1},
-  {name:'Cement',       d30:3.8,  d60:6.1,  d90:10.2},
-  {name:'Electrical',   d30:12.6, d60:18.3, d90:24.7},
-  {name:'Labour',       d30:3.2,  d60:5.0,  d90:7.8 },
-  {name:'Timber',       d30:-1.5, d60:-0.8, d90:1.2 },
-  {name:'Aggregate',    d30:2.1,  d60:4.4,  d90:6.9 },
+// ── DATA ──────────────────────────────────────────────────────────────────
+const materials = [
+  {name:'Iron Rod (12mm)', horizons:[12.6, 16.8, 21.4], color:'#f85149'},
+  {name:'Iron Rod (16mm)', horizons:[10.3, 13.9, 17.2], color:'#f85149'},
+  {name:'Cement',          horizons:[-1.1, -0.8,  1.2], color:'#3fb950'},
+  {name:'Timber',          horizons:[ 4.6,  6.1,  8.3], color:'#58a6ff'},
+  {name:'Plumbing M&E',    horizons:[ 5.4,  7.8,  9.6], color:'#d29922'},
+  {name:'Sand/Aggregate',  horizons:[ 2.1,  3.4,  5.8], color:'#58a6ff'},
 ];
-let horizon=30,selMat=0,alertFiring=false,alertCount=3,chart=null;
 
-function getDrift(m){return horizon===30?m.d30:horizon===60?m.d60:m.d90;}
-function getStatus(d){const a=Math.abs(d);return a<=5?'green':a<=10?'amber':'red';}
+let currentHorizon = 0;
+let simStep = 0;
 
-function renderMats(){
-  const el=document.getElementById('matList');
-  el.innerHTML='';
-  materials.forEach((m,i)=>{
-    const d=getDrift(m);
-    const st=getStatus(d);
-    const bw=Math.min(Math.abs(d)/26*100,100).toFixed(1);
-    const bc=st==='green'?'var(--green)':st==='amber'?'var(--amber)':'var(--red)';
-    const pc=d>=0?(st==='green'?'var(--green)':st==='amber'?'var(--amber)':'var(--red)'):'var(--green)';
-    const cbg=st==='green'?'var(--lgreen)':st==='amber'?'var(--lamber)':'var(--lred)';
-    const cc=st==='green'?'#27500A':st==='amber'?'#633806':'#791F1F';
-    const txt=st==='green'?'Normal':st==='amber'?'Watch':'Alert';
-    const row=document.createElement('div');
-    row.className='matrow'+(i===selMat?' sel':'');
-    row.innerHTML=`<span class="matname">${m.name}</span><div class="bartrack"><div class="barfill" style="width:${bw}%;background:${bc}"></div></div><span class="matpct" style="color:${pc}">${d>=0?'+':''}${d.toFixed(1)}%</span><span class="chip" style="background:${cbg};color:${cc}">${txt}</span>`;
-    row.onclick=()=>{selMat=i;renderMats();renderChart();document.getElementById('chartMatName').textContent=m.name;document.getElementById('chartMatBadge').textContent=m.name;renderMatSel();};
-    el.appendChild(row);
-  });
+function getChip(pct){
+  if(pct < 0) return {label:'NORMAL',cls:'chip-normal'};
+  if(pct < 5) return {label:'NORMAL',cls:'chip-normal'};
+  if(pct < 10) return {label:'WATCH', cls:'chip-watch'};
+  return {label:'ALERT', cls:'chip-alert'};
 }
 
-function renderMatSel(){
-  const el=document.getElementById('matSelBtns');
-  el.innerHTML='';
-  materials.forEach((m,i)=>{
-    const b=document.createElement('button');
-    b.className='msel-btn'+(i===selMat?' active':'');
-    b.textContent=m.name;
-    b.onclick=()=>{selMat=i;renderMats();renderChart();document.getElementById('chartMatName').textContent=m.name;document.getElementById('chartMatBadge').textContent=m.name;renderMatSel();};
-    el.appendChild(b);
-  });
+function getBarColor(pct){
+  if(pct >= 10) return '#f85149';
+  if(pct >= 5)  return '#d29922';
+  return '#3fb950';
 }
 
-function buildChartData(idx){
-  const m=materials[idx];
-  const lbl=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov'];
-  const act=[100,101.2,102.1,101.8,103.5,104.1,null,null,null,null,null];
-  function interp(s,e,len,off){const r=[];for(let i=0;i<11;i++){if(i<off)r.push(null);else if(i<off+len){const t=(i-off)/(len-1);r.push(parseFloat((s+(e-s)*t).toFixed(2)));}else r.push(null);}return r;}
-  return{lbl,act,f30:interp(104.1,100+m.d30,3,5),f60:interp(104.1,100+m.d60,5,5),f90:interp(104.1,100+m.d90,7,5)};
+function renderIndex(){
+  const panel = document.getElementById('indexPanel');
+  panel.innerHTML = materials.map(m => {
+    const v = m.horizons[currentHorizon];
+    const chip = getChip(v);
+    const barW = Math.min(100, Math.abs(v) * 6);
+    const barColor = getBarColor(Math.abs(v));
+    return `
+      <div class="mat-row">
+        <div class="mat-name">${m.name}</div>
+        <div>
+          <div class="mat-bar-wrap">
+            <div class="mat-bar" style="width:${barW}%;background:${barColor}"></div>
+          </div>
+        </div>
+        <div class="mat-pct" style="color:${barColor}">${v>0?'+':''}${v}%</div>
+        <div><span class="status-chip ${chip.cls}">${chip.label}</span></div>
+      </div>`;
+  }).join('');
 }
 
-function renderChart(){
-  if(chart){chart.destroy();}
-  const d=buildChartData(selMat);
-  const ctx=document.getElementById('forecastChart').getContext('2d');
-  chart=new Chart(ctx,{
+function setHorizon(idx, btn){
+  currentHorizon = idx;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderIndex();
+  updateChart();
+}
+
+// ── CHART ─────────────────────────────────────────────────────────────────
+// Iron rod (12mm) — composite price index (base 100 = Jan 2026)
+// Reflects Nigerian market: forex pressure, scrap metal costs, energy tariffs
+const labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep'];
+const actual  = [100, 102.1, 104.8, 107.3, 112.6, null, null, null, null];
+const f30     = [null,null,null,null,112.6,114.8,null,null,null];
+const f60     = [null,null,null,null,112.6,115.4,118.9,null,null];
+const f90     = [null,null,null,null,112.6,116.1,119.8,124.2,null];
+
+let chartInst;
+function buildChart(){
+  const ctx = document.getElementById('forecastChart').getContext('2d');
+  chartInst = new Chart(ctx,{
     type:'line',
-    data:{labels:d.lbl,datasets:[
-      {label:'Actual',     data:d.act,borderColor:'#003087',backgroundColor:'transparent',borderWidth:2.5,pointRadius:3,tension:.3,spanGaps:false},
-      {label:'30-day',     data:d.f30,borderColor:'#006B3F',backgroundColor:'transparent',borderWidth:1.5,borderDash:[5,3],pointRadius:2,tension:.3,spanGaps:false},
-      {label:'60-day',     data:d.f60,borderColor:'#B8860B',backgroundColor:'transparent',borderWidth:1.5,borderDash:[5,3],pointRadius:2,tension:.3,spanGaps:false},
-      {label:'90-day',     data:d.f90,borderColor:'#CC0001',backgroundColor:'transparent',borderWidth:1.5,borderDash:[5,3],pointRadius:2,tension:.3,spanGaps:false},
-    ]},
+    data:{
+      labels,
+      datasets:[
+        {label:'Iron Rod Actual',data:actual,borderColor:'#58a6ff',backgroundColor:'rgba(88,166,255,.08)',borderWidth:2,pointRadius:3,tension:.3,spanGaps:false},
+        {label:'30-day forecast',data:f30,borderColor:'#3fb950',borderDash:[4,3],borderWidth:1.5,pointRadius:2,tension:.3,spanGaps:false},
+        {label:'60-day forecast',data:f60,borderColor:'#d29922',borderDash:[4,3],borderWidth:1.5,pointRadius:2,tension:.3,spanGaps:false},
+        {label:'90-day forecast',data:f90,borderColor:'#f85149',borderDash:[4,3],borderWidth:1.5,pointRadius:2,tension:.3,spanGaps:false},
+      ]
+    },
     options:{
       responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y!=null?c.parsed.y.toFixed(1):''}`}}},
+      plugins:{
+        legend:{labels:{color:'#8b949e',font:{size:9,family:'IBM Plex Mono'},boxWidth:12}},
+        annotation:{annotations:{
+          upper:{type:'line',yMin:111.6,yMax:111.6,borderColor:'rgba(248,81,73,.4)',borderWidth:1,borderDash:[3,3]},
+          lower:{type:'line',yMin:94.8, yMax:94.8, borderColor:'rgba(248,81,73,.4)',borderWidth:1,borderDash:[3,3]},
+        }}
+      },
       scales:{
-        y:{min:88,max:130,grid:{color:'#eee'},ticks:{font:{size:10},color:'#888',callback:v=>v.toFixed(0)}},
-        x:{grid:{display:false},ticks:{font:{size:10},color:'#888'}}
+        x:{ticks:{color:'#8b949e',font:{size:8,family:'IBM Plex Mono'}},grid:{color:'rgba(48,54,61,.6)'}},
+        y:{ticks:{color:'#8b949e',font:{size:8,family:'IBM Plex Mono'},callback:v=>v.toFixed(0)},grid:{color:'rgba(48,54,61,.6)'},min:92,max:120}
       }
-    },
-    plugins:[{id:'thr',afterDraw(ch){
-      const{ctx,scales:{y,x}}=ch;
-      const y105=y.getPixelForValue(105),y95=y.getPixelForValue(95);
-      ctx.save();ctx.strokeStyle='rgba(204,0,1,.35)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
-      ctx.beginPath();ctx.moveTo(x.left,y105);ctx.lineTo(x.right,y105);ctx.stroke();
-      ctx.beginPath();ctx.moveTo(x.left,y95);ctx.lineTo(x.right,y95);ctx.stroke();
-      ctx.fillStyle='rgba(204,0,1,.7)';ctx.font='8px system-ui';
-      ctx.fillText('+5%',x.right-28,y105-3);ctx.fillText('-5%',x.right-28,y95-3);
-      ctx.restore();
-    }}]
+    }
   });
 }
 
-function setHorizon(h,btn){
-  horizon=h;
-  document.querySelectorAll('#horizonBtns .hbtn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  renderMats();renderChart();
+function updateChart(){
+  if(chartInst) chartInst.update();
 }
 
-const BASE_ALERTS=[
-  {mat:'Electrical Wiring',drift:'+12.6%',contract:'41EB-C042 Barracks Rewire',status:'red', time:'07:14 WAT',route:['done','done','active','pending']},
-  {mat:'Steel Rods',       drift:'+8.2%', contract:'43EB-B017 Admin Block',    status:'amber',time:'06:58 WAT',route:['done','active','pending','pending']},
-  {mat:'Cement (OPC)',     drift:'+6.1%', contract:'45EB-D003 Officers Mess',  status:'amber',time:'06:45 WAT',route:['done','pending','pending','pending']},
-];
+// ── SIMULATE BREACH ───────────────────────────────────────────────────────
+function simulateBreach(){
+  const btn = document.getElementById('simBtn');
+  btn.disabled = true;
+  btn.textContent = '⟳ BREACH DETECTED — ROUTING ALERT...';
+  btn.style.color = '#f85149';
+  btn.style.borderColor = '#f85149';
 
-function renderAlerts(alerts){
-  const el=document.getElementById('alertLog');el.innerHTML='';
-  const steps=['Project Officer','Resident Engineer','DProc Desk','Audit Log'];
-  alerts.forEach(a=>{
-    const bc=a.status==='red'?'#CC0001':a.status==='amber'?'#B8860B':'#006B3F';
-    const tc=a.status==='red'?'tag-red':'tag-amber';
-    let rh='';
-    steps.forEach((st,i)=>{
-      const cls=a.route[i]==='done'?'rs-done':a.route[i]==='active'?'rs-active':'rs-pend';
-      if(i>0)rh+=`<span class="rarr">&#8594;</span>`;
-      rh+=`<span class="rs ${cls}">${st}</span>`;
-    });
-    const div=document.createElement('div');
-    div.className='aitem';div.style.borderLeftColor=bc;
-    div.innerHTML=`<div class="atop"><span class="atitle">${a.mat} &nbsp;<span class="pbadge ${tc==='tag-red'?'bg-red':'bg-amber'}">${a.status==='red'?'RED ALERT':'WATCH'}</span></span><span class="atime">${a.time}</span></div><div class="abody">Contract: ${a.contract} &nbsp;|&nbsp; Index drift: <strong>${a.drift}</strong> above May baseline (Base=100)</div><div class="aroute">${rh}</div>`;
-    el.appendChild(div);
+  document.getElementById('statAlerts').textContent = '4';
+
+  // Step through workflow nodes with delays
+  const steps = [
+    {id:'wf1', delay:400,  actor:'DAW — PROJECT OFFICER',    role:'BOQ breach: Iron Rod (12mm) +12.6% — Action card issued'},
+    {id:'wf2', delay:1600, actor:'CCE — TECHNICAL CONCURRENCE', role:'Variation reviewed — BPP referral initiated'},
+    {id:'wf3', delay:2800, actor:'BPP DESK — NOC CHECK',    role:'NOC review triggered — threshold ₦139.3M > ₦100M'},
+    {id:'wf4', delay:4000, actor:'FEC APPROVAL FLAG',         role:'Federal Executive Council flag raised — ≥₦100M contract'},
+  ];
+
+  steps.forEach(({id, delay, actor, role}, i) => {
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      el.classList.add('active','breaching');
+      el.querySelector('.wf-num').className = 'wf-num active';
+      el.querySelector('.wf-num').textContent = '▶';
+      el.querySelector('.wf-actor').textContent = actor;
+      el.querySelector('.wf-role').textContent = role;
+      el.querySelector('.wf-time').textContent = new Date(Date.now()).toTimeString().slice(0,8);
+
+      setTimeout(() => {
+        el.classList.remove('active');
+        el.classList.add('complete');
+        el.querySelector('.wf-num').className = 'wf-num done';
+        el.querySelector('.wf-num').textContent = '✓';
+      }, 900);
+
+      // Add log entry
+      const log = document.getElementById('logEntries');
+      const ts = new Date(Date.now()).toTimeString().slice(0,8);
+      const entry = document.createElement('div');
+      entry.className = 'log-row breaching';
+      entry.innerHTML = `
+        <div class="log-ts">${ts}</div>
+        <div class="log-desc">${role}</div>
+        <div class="log-actor">${actor.split('—')[0].trim()}</div>
+        <div><span class="log-badge badge-red">LIVE</span></div>`;
+      log.prepend(entry);
+    }, delay);
   });
+
+  setTimeout(() => {
+    btn.textContent = '✓ COMPLETE — AUDIT TRAIL LOCKED (5.2s)';
+    btn.style.color = '#3fb950';
+    btn.style.borderColor = '#3fb950';
+    document.getElementById('statDrift').textContent = '+4.8%';
+  }, 5400);
 }
 
-function triggerAlert(){
-  if(alertFiring)return;
-  alertFiring=true;
-  const btn=document.getElementById('simBtn');
-  btn.textContent='Firing...';btn.classList.add('firing');
-  const box=document.getElementById('triggerBox');
-  box.style.display='block';box.classList.add('pulse');
-  document.getElementById('wfStatus').textContent='BREACH DETECTED';
-  document.getElementById('wfStatus').className='pbadge bg-red';
-  const steps=['wf2','wf3','wf4','wf5'];
-  const arrs=['arr1','arr2','arr3','arr4'];
-  const cols=['#003087','#006B3F','#CC0001','#444'];
-  const delays=[900,2000,3100,4200];
-  steps.forEach((id,i)=>{
-    setTimeout(()=>{
-      const el=document.getElementById(id);
-      el.style.background=i<3?'#EBF3FB':'#EAF3DE';
-      el.style.borderColor=cols[i];el.style.color=cols[i];
-      if(id==='wf5')el.innerHTML=`<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7L6 11L12 3" stroke="${cols[i]}" stroke-width="2" stroke-linecap="round"/></svg>`;
-      if(arrs[i])document.getElementById(arrs[i]).style.color=cols[i];
-    },delays[i]);
+
+// ── NIGERIA GEOTECHNICAL STATE DATA ──────────────────────────────────────
+const stateData = {
+  'Borno':     {flag:'red',  label:'HIGH RISK',  soil:'Lacustrine clay deposits (Chad Basin); expansive black cotton soil (vertisols); sandy alluvium',                                       tests:'CBR, Atterberg limits, consolidation, shrink-swell analysis, sulphate content, piezometer installation',              logistics:'+18–25%', logClass:'red',   risk:'Severe seasonal flooding; road access lost Jun–Oct; black cotton soil causes heave and structural cracking in dry season; security constraints add to cost'},
+  'Yobe':      {flag:'red',  label:'HIGH RISK',  soil:'Aeolian sand over laterite; black cotton clay pockets in fadama wetland areas',                                                        tests:'Particle size analysis, permeability, CBR, moisture-density, sulphate content, fadama identification boring',           logistics:'+16–22%', logClass:'red',   risk:'Wind erosion compromises open excavations; fadama clay pockets highly unpredictable without investigation; remote access'},
+  'Adamawa':   {flag:'red',  label:'HIGH RISK',  soil:'Basement complex weathered granite; colluvial hillside soils; black cotton soil in valleys',                                           tests:'Borehole min 8m, pressuremeter, slope stability analysis, CBR, soil classification suite',                               logistics:'+20–28%', logClass:'red',   risk:'Steep terrain; differential settlement on hillside sites; valley soils highly compressible; extreme remoteness'},
+  'Taraba':    {flag:'red',  label:'HIGH RISK',  soil:'Weathered basement complex; alluvial silts along Benue/Taraba rivers; laterite',                                                      tests:'SPT, consolidation, CBR, permeability, particle size, bearing capacity test at alluvial sites',                          logistics:'+22–30%', logClass:'red',   risk:'Most remote state for construction logistics; river crossings essential; alluvial soils require deep foundations'},
+  'Delta':     {flag:'red',  label:'HIGH RISK',  soil:'Niger Delta alluvial clay and peat; very soft compressible soils; coastal sands',                                                     tests:'Vane shear, oedometer/consolidation, peat characterisation, piezometer installation, CBR',                               logistics:'+20–35%', logClass:'red',   risk:'Peat and soft clay unsuitable for shallow foundations; barge logistics required in creek areas; severe long-term settlement'},
+  'Bayelsa':   {flag:'red',  label:'HIGH RISK',  soil:'Mangrove peat and organic clay; waterlogged alluvium; negligible bearing capacity in places',                                         tests:'Vane shear, consolidation, organic content, piezometer, deep boring to reach firm stratum',                             logistics:'+35–50%', logClass:'red',   risk:'Most of state is floodplain; piled foundations almost certain; all materials delivered by water; highest logistics cost in Nigeria'},
+  'Rivers':    {flag:'red',  label:'HIGH RISK',  soil:'Niger Delta alluvium; soft marine clay; estuarine sands; peat lenses',                                                                tests:'Vane shear, consolidation, SPT in deeper strata, piezometers, chemical groundwater analysis',                            logistics:'+25–38%', logClass:'red',   risk:'Soft clays cause long-term settlement; acid sulphate soils corrode concrete and steel; tidal flooding risk; oil infrastructure proximity'},
+  'Akwa Ibom': {flag:'red',  label:'HIGH RISK',  soil:'Coastal plain sands; alluvial clay; high water table; acid sulphate soils near coast',                                                tests:'Acid sulphate assessment, groundwater chemistry analysis, CBR, consolidation, SPT',                                     logistics:'+18–26%', logClass:'red',   risk:'Acid sulphate soils severely damage concrete and accelerate reinforcement corrosion; high water table requires dewatering'},
+  'Cross River':{flag:'red', label:'HIGH RISK',  soil:'Crystalline basement south; sedimentary coastal soils north; tropical residual soils throughout',                                     tests:'Laterite characterisation, CBR, sieve analysis, Atterberg limits, deep borehole in sedimentary zones',                 logistics:'+15–22%', logClass:'red',   risk:'Highly variable soil profile; dense forest terrain increases construction cost significantly; limited contractor base outside Calabar'},
+  'Ebonyi':    {flag:'red',  label:'HIGH RISK',  soil:'Shale-derived residual soils; dispersive clay; high sulphate content widespread',                                                     tests:'Pinhole dispersibility test, sulphate content, CBR, Emerson crumb test, consolidation',                                 logistics:'+10–15%', logClass:'red',   risk:'Dispersive clays erode internally — catastrophic for earth embankments and road sub-bases; sulphates attack concrete mix'},
+  'Abia':      {flag:'red',  label:'HIGH RISK',  soil:'Shale-derived clays; acid soils; tropical laterite over soft clay in places',                                                         tests:'pH test, sulphate content, CBR, Atterberg limits, consolidation in clay zones',                                         logistics:'+12–18%', logClass:'red',   risk:'Acid soils and shale-derived clays cause heave; seasonal flooding compounds settlement risk; oil spill contamination in some areas'},
+  'Edo':       {flag:'red',  label:'HIGH RISK',  soil:'Benin Formation sands; coastal plain sands; seasonal high water table',                                                               tests:'Dynamic probing, groundwater monitoring, sand density, sieve analysis, CBR',                                             logistics:'+12–18%', logClass:'red',   risk:'High water table causes foundation buoyancy; loose sands may liquefy under vibration; seasonal flooding in Benin lowlands'},
+
+  'Sokoto':    {flag:'amber', label:'MODERATE',  soil:'Sedimentary laterite and sandstone; gypsum-bearing soils in places',                                                                  tests:'CBR, Atterberg limits, sulphate/gypsum content test, particle size analysis',                                           logistics:'+8–12%',  logClass:'amber', risk:'Gypsum-bearing soils attack concrete if untreated; Harmattan dust compromises concrete curing; remote NW location'},
+  'Kebbi':     {flag:'amber', label:'MODERATE',  soil:'Alluvial soils along Niger/Kebbi rivers; laterite uplands; seasonal waterlogging in fadama',                                          tests:'CBR, compaction, flood risk assessment, permeability, Atterberg limits',                                                logistics:'+8–14%',  logClass:'amber', risk:'Floodplain sites need elevated founding levels; seasonal road degradation; river logistics sometimes viable'},
+  'Zamfara':   {flag:'amber', label:'MODERATE',  soil:'Basement complex over laterite; weathered granite; isolated black cotton soil pockets',                                               tests:'CBR, borehole 6m min, Atterberg limits where clay suspected, compaction test',                                          logistics:'+6–10%',  logClass:'amber', risk:'Weathered granite variable depth; artisanal mining activity destabilises ground in some areas; rural road condition'},
+  'Kaduna':    {flag:'amber', label:'MODERATE',  soil:'Basement complex; weathered granite and schist; laterite crust; black cotton soil in Zaria corridor',                                 tests:'SPT, CBR, black cotton identification, shrink-swell assessment, compaction',                                            logistics:'+4–8%',   logClass:'amber', risk:'Black cotton soil in northern corridor causes seasonal heave; weathered basement variable depth; well-connected otherwise'},
+  'Niger':     {flag:'amber', label:'MODERATE',  soil:'Basement complex with deep laterite; alluvial soils along River Niger and Kaduna',                                                    tests:'CBR, compaction, particle size, borehole 6m in alluvial zones',                                                        logistics:'+6–12%',  logClass:'amber', risk:'Large state; variable road network; alluvial sites near Niger/Kaduna rivers require specific investigation; Kainji area rocky'},
+  'Bauchi':    {flag:'amber', label:'MODERATE',  soil:'Basement complex; laterite; Jos Plateau edge with rocky outcrops in south',                                                          tests:'CBR, RQD where rocky, borehole 5m min, compaction',                                                                    logistics:'+6–10%',  logClass:'amber', risk:'Rocky outcrops increase excavation cost; laterite quality variable; Jos Plateau edge has extreme terrain'},
+  'Gombe':     {flag:'amber', label:'MODERATE',  soil:'Sedimentary laterite; black cotton soil patches; sandy soils in north',                                                              tests:'CBR, Atterberg limits, black cotton identification, sulphate content',                                                  logistics:'+7–12%',  logClass:'amber', risk:'Black cotton soil pockets require mapping before design; limited contractor base outside Gombe town'},
+  'Nassarawa': {flag:'amber', label:'MODERATE',  soil:'Basement complex; weathered granite; laterite over clay in valleys',                                                                 tests:'CBR, borehole 5m, Atterberg limits in valley zones, compaction',                                                       logistics:'+5–9%',   logClass:'amber', risk:'Valley clay soils underperform under load; basement complex depth variable; some rural road access seasonal'},
+  'Plateau':   {flag:'amber', label:'MODERATE',  soil:'Rocky basement complex; thin laterite soils; steep terrain and escarpments',                                                         tests:'RQD, CBR, rock socket capacity, slope stability assessment where relevant',                                              logistics:'+8–14%',  logClass:'amber', risk:'Thin soils require rock socket foundations; steep slopes increase cut-and-fill; cold nights slow concrete curing at altitude'},
+  'Benue':     {flag:'amber', label:'MODERATE',  soil:'Alluvial soils along Benue River; residual basement soils; black cotton in floodplains',                                             tests:'CBR, Atterberg limits, consolidation in floodplain zones, flood level assessment',                                      logistics:'+7–12%',  logClass:'amber', risk:'Benue River flooding affects valley sites; black cotton soil in floodplain; main roads impassable in wet season'},
+  'Ondo':      {flag:'amber', label:'MODERATE',  soil:'Coastal sands in south; basement laterite in north; alluvial clay in creek zones',                                                   tests:'CBR, particle size, groundwater assessment in southern zone, compaction',                                               logistics:'+6–10%',  logClass:'amber', risk:'Creek zone sites require barge access; coastal sands loose and require compaction verification'},
+  'Ekiti':     {flag:'amber', label:'MODERATE',  soil:'Basement complex over laterite; migmatite and granite; clay in valleys',                                                             tests:'CBR, borehole 5m min, Atterberg limits in valley zones, moisture-density relationship',                                 logistics:'+5–8%',   logClass:'amber', risk:'Hilly terrain increases earthwork cost; valley clay soils compressible; small urban centres limit available contractors'},
+  'Anambra':   {flag:'amber', label:'MODERATE',  soil:'Sandy loam over clay; alluvial sands near River Niger; residual basement soils',                                                     tests:'CBR, particle size, consolidation near river, groundwater monitoring, compaction',                                      logistics:'+5–9%',   logClass:'amber', risk:'Gully erosion endemic — sites must avoid erosion-prone areas; river zone soils require specific investigation'},
+  'Enugu':     {flag:'amber', label:'MODERATE',  soil:'Shale and sandstone-derived residual soils; some dispersive clay; laterite crust',                                                   tests:'CBR, Atterberg limits, pinhole dispersibility check, sulphate content, compaction',                                     logistics:'+5–8%',   logClass:'amber', risk:'Shale-derived soils potentially dispersive; coal mine workings in some areas create subsidence risk'},
+  'Imo':       {flag:'amber', label:'MODERATE',  soil:'Sandy residual soils over shale; gully-prone terrain; seasonal high water table',                                                    tests:'CBR, Atterberg limits, groundwater level, slope stability assessment, compaction',                                      logistics:'+6–10%',  logClass:'amber', risk:'Severe gully erosion; shale-derived soils swell when wet; oil installation proximity in some areas'},
+
+  'Katsina':   {flag:'green', label:'STANDARD',  soil:'Basement complex with laterite crust; generally stable granular soils; well-characterised',                                          tests:'CBR, compaction test, borehole 4m min, particle size analysis',                                                        logistics:'Standard', logClass:'green', risk:'Good load-bearing capacity typical; routine geotechnical investigation sufficient for most sites'},
+  'Kano':      {flag:'green', label:'STANDARD',  soil:'Basement complex; laterite crust; stable granular soils; urban sites extensively characterised',                                     tests:'CBR, standard borehole 4m, compaction, Atterberg limits as check',                                                     logistics:'Standard', logClass:'green', risk:'Best-connected logistics in northern Nigeria; established contractor base; soil profile well-documented'},
+  'Jigawa':    {flag:'green', label:'STANDARD',  soil:'Laterite over basement complex; sandy soils in north; generally good bearing capacity',                                              tests:'CBR, compaction, borehole 4m, particle size analysis',                                                                 logistics:'+3–5%',   logClass:'green', risk:'Northern sandy soils need wind erosion susceptibility check; otherwise routine investigation'},
+  'FCT':       {flag:'green', label:'STANDARD',  soil:'Basement complex; well-characterised laterite; Abuja the most extensively studied soil profile in Nigeria',                          tests:'CBR, standard borehole 5m (regulatory requirement), compaction, Atterberg limits',                                     logistics:'Standard', logClass:'green', risk:'Best-characterised soil in Nigeria due to planned city development; regulatory compliance requires standard investigation'},
+  'Kwara':     {flag:'green', label:'STANDARD',  soil:'Basement complex over laterite; stable granular soils; alluvial patches near River Niger',                                           tests:'CBR, borehole 4m, compaction, alluvial check near river',                                                              logistics:'+3–5%',   logClass:'green', risk:'Generally good bearing capacity; River Niger proximity requires flood level check for some sites'},
+  'Kogi':      {flag:'green', label:'STANDARD',  soil:'Basement complex; laterite; alluvial soils at Niger/Benue confluence',                                                               tests:'CBR, borehole 5m, Atterberg limits, alluvial assessment at confluence sites',                                           logistics:'+3–6%',   logClass:'green', risk:'Confluence zone sites require specific investigation; upland sites generally good; reasonable road network'},
+  'Oyo':       {flag:'green', label:'STANDARD',  soil:'Basement complex; laterite crust; generally stable with good bearing capacity throughout',                                           tests:'CBR, borehole 4m min, compaction, Atterberg limits as standard',                                                       logistics:'Standard', logClass:'green', risk:'Well-connected; established construction industry; soil profile generally well-understood'},
+  'Osun':      {flag:'green', label:'STANDARD',  soil:'Basement complex over laterite; stable soils typical of SW Nigeria',                                                                 tests:'CBR, borehole 4m, compaction, standard Atterberg suite',                                                               logistics:'Standard', logClass:'green', risk:'Routine investigation sufficient; good contractor availability in Osogbo corridor'},
+  'Lagos':     {flag:'green', label:'STANDARD',  soil:'Sandy coastal soils in south; basement complex in north; well-characterised urban soils throughout',                                 tests:'CBR, groundwater level, particle size, borehole 5m min; coastal sites need additional investigation',                  logistics:'Standard', logClass:'green', risk:'Coastal sites: high water table and loose sands require specific design; inland/Ikeja: generally good; best logistics in Nigeria'},
+  'Ogun':      {flag:'green', label:'STANDARD',  soil:'Basement complex; laterite; sedimentary soils near Lagos border',                                                                   tests:'CBR, borehole 4m, compaction, Atterberg limits',                                                                       logistics:'Standard', logClass:'green', risk:'Good bearing capacity typical; proximity to Lagos gives excellent logistics and contractor access'},
+};
+
+// ── MAP INTERACTION ───────────────────────────────────────────────────────
+const ngTooltip = document.getElementById('ngTooltip');
+
+document.querySelectorAll('.state-shape').forEach(shape => {
+  shape.addEventListener('mouseenter', e => {
+    const d = stateData[shape.dataset.state];
+    if (!d) return;
+    const head = document.getElementById('ttHead');
+    const colors = {red:'rgba(204,0,1,.22)',amber:'rgba(184,134,11,.18)',green:'rgba(0,107,63,.18)'};
+    head.style.background = colors[d.flag];
+    document.getElementById('ttState').textContent = shape.dataset.state;
+    const flagEl = document.getElementById('ttFlag');
+    flagEl.textContent = d.label;
+    flagEl.className = 'tt-flag ' + d.flag;
+    document.getElementById('ttSoil').textContent = d.soil;
+    document.getElementById('ttTests').textContent = d.tests;
+    const logEl = document.getElementById('ttLogistics');
+    logEl.textContent = d.logistics;
+    logEl.className = 'tt-cost ' + d.logClass;
+    document.getElementById('ttRisk').textContent = d.risk;
+    ngTooltip.style.display = 'block';
+    positionTip(e);
   });
-  setTimeout(()=>{
-    alertCount++;
-    document.getElementById('alertCount').textContent=alertCount;
-    document.getElementById('alertSub').textContent='3 amber \u00a0·\u00a0 1 red \u00a0· NEW';
-    document.getElementById('avgDrift').textContent='+7.1%';
-    const newA={mat:'Cement (OPC)',drift:'+10.2%',contract:'46EB-A009 Training Wing',status:'red',time:'LIVE',route:['done','active','pending','pending']};
-    renderAlerts([newA,...BASE_ALERTS]);
-    btn.textContent='Simulate breach';btn.classList.remove('firing');
-    document.getElementById('wfStatus').textContent='MONITORING';
-    alertFiring=false;
-    setTimeout(()=>{
-      box.style.display='none';box.classList.remove('pulse');
-      steps.forEach(id=>{
-        if(id==='wf2'||id==='wf3'){const el=document.getElementById(id);el.style.background='#F0F2F5';el.style.borderColor='#ccc';el.style.color='#888';}
-      });
-      ['arr1','arr2','arr3','arr4'].forEach(id=>{document.getElementById(id).style.color='#bbb';});
-    },6000);
-  },5200);
+  shape.addEventListener('mousemove', positionTip);
+  shape.addEventListener('mouseleave', () => { ngTooltip.style.display = 'none'; });
+});
+
+function positionTip(e) {
+  const vw = window.innerWidth, vh = window.innerHeight;
+  let x = e.clientX + 16, y = e.clientY + 16;
+  if (x + 280 > vw - 8) x = e.clientX - 296;
+  if (y + 320 > vh - 8) y = e.clientY - 336;
+  ngTooltip.style.left = x + 'px';
+  ngTooltip.style.top  = y + 'px';
 }
 
-function tick(){
-  document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' WAT';
-}
-
-renderMats();renderMatSel();renderChart();renderAlerts(BASE_ALERTS);
-tick();setInterval(tick,1000);
+// ── INIT ──────────────────────────────────────────────────────────────────
+renderIndex();
+buildChart();
 </script>
 </body>
 </html>
